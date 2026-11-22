@@ -346,6 +346,7 @@ function chart(rows) {
 
 const R = {
   dashboard() {
+    if (!D.emps.length) return `<h2>لوحة التحكم</h2><div class="panel infoband"><h3>قاعدة البيانات فارغة</h3>${may('import') ? '<p>ارفع ملف البيانات الكاملة <b>FN_Clinic_data.json</b> مرة واحدة من صفحة «Excel والنسخ»، وكل الموظفين والرواتب والإجازات هتظهر لكل المستخدمين.</p><div class="row"><a class="btn" href="#data">اذهب لرفع الملف</a></div>' : '<p>لم يتم تحميل البيانات بعد. اطلب من المدير رفع ملف البيانات.</p>'}</div>`;
     const cur = D.pay.filter(p => p.y === st.y && p.m === st.m), allB = Object.values(BAL), bals = D.emps.filter(e => e.status === ACTIVE).map(e => BAL[e.id]);
     const monthly = MONTHS.map((_, i) => { const r = D.pay.filter(p => p.y === st.y && p.m === i + 1); return {gross: sum(r, p => p.gross), ded: sum(r, p => p.totded), net: sum(r, p => p.net)}; });
     const net = sum(cur, p => p.net);
@@ -1308,6 +1309,25 @@ async function doExport() {
   catch (e) { io.note = e && e.code === 'declined' ? 'تم إلغاء التنزيل.' : 'تعذر تنزيل الملف. حاول مرة أخرى.'; }
   render();
 }
+async function importJsonFile(f) {
+  if (!io.db || !may('import')) { io.note = 'رفع الملفات متاح للمدير والمحررين.'; return render(); }
+  let d; try { d = JSON.parse(await f.text()); } catch (e) { io.note = 'الملف ليس ملف بيانات صحيح.'; return render(); }
+  if (!d || !d.hr || !d.hr.emps || !d.pay) { io.note = 'هذا ليس ملف بيانات النظام الكامل.'; return render(); }
+  if (D.emps.length && !confirmJson) { confirmJson = true; io.note = 'قاعدة البيانات فيها بيانات بالفعل. ارفع الملف مرة أخرى للتأكيد وسيتم استبدالها (مع حفظ نسخة احتياطية).'; return render(); }
+  confirmJson = false; io.busy = true; io.note = 'جاري تحميل كل البيانات في قاعدة البيانات…'; render();
+  try {
+    if (D.emps.length) await autoBackup();
+    let n = 0;
+    for (const [k, v] of Object.entries(d.hr)) if (k !== 'meta') { await io.db.doc('hr/' + k).set(v); n++; }
+    for (const [y, v] of Object.entries(d.pay)) { await io.db.doc('pay/' + y).set(v); n++; }
+    for (const [k, v] of Object.entries(d.close || {})) { await io.db.doc('close/' + k).set(v); n++; }
+    await touch();
+    await logAudit('تحميل البيانات الكاملة', 'import', (d.hr.emps.rows || []).length + ' موظف', []);
+    io.note = 'تم تحميل كل البيانات (' + n + ' مستند). الموظفون والرواتب والإجازات ظاهرة الآن.';
+  } catch (e) { io.note = writeErr(e) + ' — تأكد من قواعد أمان Firestore.'; }
+  io.busy = false; render();
+}
+let confirmJson = false;
 async function doImport() {
   const d = io.imp; if (!d || !io.db) return;
   if (d.lockedChanged.length && myRole() !== 'مدير') { io.note = 'الملف يغيّر شهوراً معتمدة. اطلب من المدير رفعه أو إعادة فتح هذه الشهور.'; return render(); }
@@ -1343,8 +1363,8 @@ R.data = function () {
     <div class="row"><button class="btn" data-act="export"${io.loaded && D.emps.length ? '' : ' disabled'}>تنزيل ملف Excel</button></div></div>
   <div class="panel"><h3>رفع ملف بعد التعديل</h3>
     ${!may('import') ? '<p class="msg">رفع الملفات متاح للمدير والمحررين.</p>' :
-      `<div class="row"><label for="file" class="note">اختر ملف xlsx</label><input type="file" id="file" accept=".xlsx"></div>
-       <p class="note">يُقبل الملف الذي نزّلته من هنا أو ملف نظام الإكسيل. الأعمدة المحسوبة يعاد حسابها تلقائياً.</p>`}</div>${preview}
+      `<div class="row"><label for="file" class="note">اختر ملف xlsx</label><input type="file" id="file" accept=".xlsx,.json"></div>
+       <p class="note">يُقبل الملف الذي نزّلته من هنا، أو ملف نظام الإكسيل، أو ملف البيانات الكاملة (FN_Clinic_data.json) لتحميل كل البيانات أول مرة. الأعمدة المحسوبة يعاد حسابها تلقائياً.</p>`}</div>${preview}
   ${may('import') ? `<div class="panel"><h3>النسخ الاحتياطية</h3>
     <p class="note">نسخة تلقائية كل يوم عند أول دخول للمدير أو المحرر، وقبل كل رفع ملف. يُحتفظ بآخر 30 يوماً.</p>
     ${io.backups ? table([['التاريخ'], ['']], io.backups.map(b => `<tr>${td(dt(b))}<td class="acts">${may('restore') ? `<button class="mini" data-act="restore:${b}"${io.busy ? ' disabled' : ''}>استرجاع</button>` : ''}</td></tr>`)) : `<button class="btn ghost" data-act="listbk">عرض النسخ</button>`}
@@ -1390,6 +1410,7 @@ app.addEventListener('change', async e => {
   const t = e.target;
   if (t.id === 'file') {
     const f = t.files[0]; if (!f) return;
+    if (/\.json$/i.test(f.name)) { t.value = ''; return importJsonFile(f); }
     try { io.imp = parseWorkbook(await f.arrayBuffer()); io.note = ''; } catch (err) { io.imp = null; io.note = 'تعذر قراءة الملف: ' + (err.message || 'صيغة غير مدعومة'); }
     return render();
   }
