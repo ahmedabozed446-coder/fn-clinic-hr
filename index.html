@@ -1,0 +1,1735 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>نظام شؤون موظفي العيادة</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@500;700&display=swap">
+<style id="css">
+/* layout: sticky header with scrolling tab bar; each view = summary tiles, then tables in their own scroll boxes */
+:root{
+  --bg:#f1f5f5; --surface:#ffffff; --ink:#12292e; --muted:#5b6f74; --line:#d4dee0;
+  --accent:#0f6b78; --accent-soft:#dff0f2; --head:#0f4c5c; --head-ink:#ffffff; --gold:#a8742a;
+  --good:#1d7a4f; --bad:#b3372f; --bar2:#8fc3ca;
+  --display:'Readex Pro','IBM Plex Sans Arabic',Tahoma,sans-serif;
+  --body:'IBM Plex Sans Arabic',Tahoma,'Segoe UI',sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d1b1e; --surface:#15282c; --ink:#e4eeef; --muted:#93a8ac; --line:#28424a;
+    --accent:#5cc2cf; --accent-soft:#1c3a40; --head:#0a343f; --head-ink:#e9f6f7; --gold:#e0b060;
+    --good:#5fcf98; --bad:#f08a80; --bar2:#2f6f79; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d1b1e; --surface:#15282c; --ink:#e4eeef; --muted:#93a8ac; --line:#28424a;
+  --accent:#5cc2cf; --accent-soft:#1c3a40; --head:#0a343f; --head-ink:#e9f6f7; --gold:#e0b060;
+  --good:#5fcf98; --bad:#f08a80; --bar2:#2f6f79; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6}
+header{background:var(--head);color:var(--head-ink);position:sticky;top:0;z-index:5}
+.top{padding:14px 16px 8px;display:flex;flex-wrap:wrap;gap:4px 16px;align-items:baseline;justify-content:space-between}
+h1{font-family:var(--display);font-size:20px;margin:0;font-weight:700;text-wrap:balance}
+.top small{opacity:.8;font-size:12px}
+nav{display:flex;gap:4px;overflow-x:auto;padding:0 12px 8px;scrollbar-width:thin}
+nav a{flex:none;color:var(--head-ink);text-decoration:none;padding:6px 12px;border-radius:999px;font-size:14px;font-weight:500;opacity:.8}
+nav a:hover{opacity:1}
+nav a[aria-current="page"]{background:var(--head-ink);color:var(--head);opacity:1;font-weight:700}
+a:focus-visible,select:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+main{max-width:1200px;margin:0 auto;padding:18px 16px 48px;display:flex;flex-direction:column;gap:18px}
+h2{font-family:var(--display);font-size:18px;margin:0;text-wrap:balance}
+h3{font-size:14px;margin:0;color:var(--accent);font-weight:700}
+.controls{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:end}
+.controls label{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--muted);font-weight:600}
+select{font:inherit;font-size:14px;color:var(--ink);background:var(--surface);border:1.5px solid var(--accent);border-radius:8px;padding:6px 10px;min-width:110px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.tile{background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:8px;padding:10px 12px}
+.tile.gold{border-top-color:var(--gold)}
+.tile span{display:block;font-size:12px;color:var(--muted);font-weight:600}
+.tile b{font-family:var(--display);font-size:20px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.tile i{font-style:normal;font-size:11px;color:var(--muted);margin-inline-start:4px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:start;white-space:nowrap}
+th{background:var(--accent-soft);color:var(--ink);font-weight:700;font-size:12.5px;position:sticky;top:0}
+td.n,th.n{text-align:end;font-variant-numeric:tabular-nums;direction:ltr}
+tfoot td{font-weight:700;background:var(--accent-soft);border-bottom:0}
+tbody tr:hover{background:var(--accent-soft)}
+.pill{display:inline-block;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:600;background:var(--accent-soft);color:var(--accent)}
+.pill.off{color:var(--bad)}
+.neg{color:var(--bad)} .pos{color:var(--good)}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px}
+.kv div{border:1px solid var(--line);border-radius:6px;padding:6px 10px;min-width:0}
+.kv span{display:block;font-size:11.5px;color:var(--muted);font-weight:600}
+.kv b{font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.kv .hi{border-color:var(--accent);background:var(--accent-soft)}
+.kv .hi b{font-family:var(--display);font-size:17px}
+.bar{height:8px;border-radius:4px;background:var(--accent);min-width:2px}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-inline-end:5px}
+svg text{fill:var(--muted);font-family:var(--body);font-size:11px}
+.note{font-size:12.5px;color:var(--muted);margin:0;max-width:65ch}
+.slip{max-width:720px}
+.net{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--head);color:var(--head-ink);border-radius:8px;padding:12px 16px}
+.net b{font-family:var(--display);font-size:22px;font-variant-numeric:tabular-nums}
+.btn{font:inherit;font-weight:700;font-size:14px;border:0;border-radius:8px;padding:9px 16px;background:var(--accent);color:var(--surface);cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent);border:1.5px solid var(--accent)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+input[type=file]{font:inherit;font-size:13px;color:var(--ink);max-width:100%}
+.msg{font-weight:600;margin:0}
+.warn{color:var(--bad)}
+.cal{border-collapse:separate;border-spacing:2px;width:auto;font-size:12px}
+.cal th,.cal td{padding:0;border:0;white-space:nowrap}
+.cal th{background:transparent;position:static}
+.cal th.d{width:26px;text-align:center;font-size:11px;background:transparent;color:var(--muted);position:static;line-height:1.2;padding:2px 0}
+.cal th.d.fri{color:var(--bad)}
+.cal td.nm{padding:0 8px;font-weight:600;font-size:12.5px;position:sticky;right:0;background:var(--surface);z-index:1}
+.cal td.c{width:26px;height:24px;text-align:center;border-radius:4px;background:var(--accent-soft);font-weight:700;font-size:11px;opacity:.55}
+.cal td.c.fri{background:var(--line);opacity:.8}
+.cal td.c.f{background:var(--gold);color:#2a1d00;opacity:1}
+.cal td.c.a{background:var(--accent);color:var(--surface);opacity:1}
+.cal td.c.p{background:var(--surface);color:var(--accent);box-shadow:inset 0 0 0 2px var(--accent);opacity:1}
+.cal td.cnt{text-align:center;font-weight:700;font-size:12px;padding:0 4px}
+.cal td.cnt.hot{color:var(--bad)}
+.cal tbody tr:hover{background:transparent}
+.yb{display:grid;grid-template-columns:max-content max-content 40px;align-items:center;column-gap:8px;row-gap:3px;width:max-content}
+.yb .nm{font-weight:600;font-size:12.5px;position:sticky;right:0;background:var(--surface);padding-inline-end:6px;z-index:1;white-space:nowrap}
+.yb .tot{font-weight:700;font-size:12px;text-align:center;font-variant-numeric:tabular-nums}
+.yb svg{display:block}
+.yb svg text{font-size:10.5px;fill:var(--muted)}
+.yb .bar-f{fill:var(--gold)} .yb .bar-a{fill:var(--accent)} .yb .bar-p{fill:var(--surface);stroke:var(--accent);stroke-width:1.5}
+.yb .mb{fill:var(--accent-soft)} .yb .ml{stroke:var(--line)} .yb .today{stroke:var(--bad);stroke-width:2}
+.key{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--muted);align-items:center}
+.key i{display:inline-block;width:16px;height:16px;border-radius:4px;vertical-align:middle;margin-inline-end:6px}
+td.mz{color:var(--line)}
+td.mon{font-weight:700;color:var(--accent)}
+.pill.st-معتمد{background:var(--accent);color:var(--surface)} .pill.st-ملغاة{color:var(--bad);text-decoration:line-through} .pill.st-تمت{background:var(--line);color:var(--ink)}
+
+.row.between{justify-content:space-between}
+.mini{font:inherit;font-size:12px;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:3px 9px;cursor:pointer;margin-inline-end:4px}
+.mini:hover{border-color:var(--accent);color:var(--accent)} .mini.danger{color:var(--bad);border-color:var(--bad)} .mini.ok{color:var(--good);border-color:var(--good)}
+.mini:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+td.acts{white-space:nowrap;text-align:start}
+.lock{font-size:11px;color:var(--muted)}
+.ov{position:fixed;inset:0;background:rgba(10,20,24,.55);z-index:20}
+.dlg{position:fixed;z-index:21;inset-inline:0;top:5vh;margin:0 auto;width:min(720px,calc(100% - 24px));max-height:88vh;overflow:auto;background:var(--surface);color:var(--ink);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.flds{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 14px}
+.fld{display:flex;flex-direction:column;gap:3px;font-size:12.5px;font-weight:600;color:var(--muted)} .fld.wide{grid-column:1/-1}
+.fld input,.fld select,.fld textarea{font:inherit;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 9px;width:100%}
+.fld input:focus,.fld select:focus,.fld textarea:focus{outline:2px solid var(--accent);outline-offset:0}
+.fld input:disabled,.fld select:disabled{opacity:.6}
+.controls input[type=date]{font:inherit;font-size:14px;color:var(--ink);background:var(--surface);border:1.5px solid var(--accent);border-radius:8px;padding:5px 8px}
+.toast{background:var(--accent-soft);border-radius:8px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.alerts{display:flex;flex-wrap:wrap;gap:8px}
+.alert{font-weight:700;font-size:13.5px;padding:7px 12px;border-radius:8px;text-decoration:none;border:1px solid}
+.alert.bad{color:var(--bad);border-color:var(--bad);background:color-mix(in srgb,var(--bad) 8%,transparent)}
+.alert.warn2{color:var(--gold);border-color:var(--gold);background:color-mix(in srgb,var(--gold) 10%,transparent)}
+.alert.info{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+.cnt-b{display:inline-block;min-width:18px;padding:0 5px;border-radius:9px;background:var(--bad);color:#fff;font-size:11px;text-align:center;margin-inline-start:4px}
+.stbox{font-size:13px;color:var(--muted);display:flex;gap:8px;align-items:center}
+.stbox a{color:var(--accent)}
+.pill.st-مرفوض,.pill.st-منتهي,.pill.st-تغيّر_بعد_الاعتماد,.pill.st-ملغي,.pill.st-إيقاف_عن_العمل{color:var(--bad)}
+.pill.st-بانتظار_المدير,.pill.st-بانتظار_الموارد_البشرية,.pill.st-بانتظار_الاعتماد,.pill.st-ينتهي_قريباً,.pill.st-إنذار_كتابي{color:var(--gold)}
+.pill.st-تم_الدفع,.pill.st-ساري{background:color-mix(in srgb,var(--good) 15%,transparent);color:var(--good)}
+.pill.st-غير_مسجل,.pill.st-مسودة,.pill.st-مشاهد{color:var(--muted);background:var(--line)}
+.pill.st-مدير{background:var(--head);color:var(--head-ink)}
+.chg{font-size:12.5px} .chg s{color:var(--muted)}
+.infoband{background:var(--accent-soft);border-color:var(--accent)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+ul{margin:4px 0;padding-inline-start:20px}
+.empty{color:var(--muted);padding:14px;text-align:center}
+
+/* === Standalone Firebase Auth & Sync Styles === */
+.top-r{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.sync-pill{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:2px 9px;border-radius:999px;background:rgba(255,255,255,.14);color:var(--head-ink)}
+.sync-pill i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#4ade80}
+.sync-pill.off i{background:#f87171}
+.btn-out{font:inherit;font-size:12px;font-weight:700;padding:4px 11px;border-radius:999px;border:1px solid rgba(255,255,255,.45);background:transparent;color:var(--head-ink);cursor:pointer}
+.btn-out:hover{background:rgba(255,255,255,.15)}
+#authScreen{min-height:100vh;display:none;align-items:center;justify-content:center;padding:20px;background:var(--bg)}
+#authScreen.show{display:flex}
+.auth-card{width:min(420px,100%);background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--head);border-radius:12px;padding:24px 22px;box-shadow:0 12px 36px rgba(0,0,0,.08);display:flex;flex-direction:column;gap:14px}
+.auth-card h1{color:var(--head);font-size:21px;margin:0}
+.auth-card .sub{margin:0;color:var(--muted);font-size:13px}
+.auth-card form{display:flex;flex-direction:column;gap:12px}
+.auth-card .fld input{width:100%;padding:9px 11px;font-size:14.5px}
+.auth-err{background:color-mix(in srgb,var(--bad) 10%,transparent);border:1px solid var(--bad);color:var(--bad);border-radius:8px;padding:9px 11px;font-size:13px;font-weight:600;display:none}
+.auth-err.show{display:block}
+.auth-ok{background:color-mix(in srgb,var(--good) 12%,transparent);border:1px solid var(--good);color:var(--good);border-radius:8px;padding:9px 11px;font-size:13px;font-weight:600;display:none}
+.auth-ok.show{display:block}
+.auth-cfg{background:color-mix(in srgb,var(--gold) 12%,transparent);border:1px solid var(--gold);color:var(--ink);border-radius:8px;padding:10px 12px;font-size:12.5px;line-height:1.65;display:none}
+.auth-cfg.show{display:block}
+.auth-cfg code{background:var(--accent-soft);padding:1px 5px;border-radius:4px;direction:ltr;display:inline-block}
+.link-btn{background:none;border:0;color:var(--accent);font:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:0;text-align:start}
+.link-btn:hover{text-decoration:underline}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<section id="authScreen" class="show" aria-label="تسجيل الدخول">
+  <div class="auth-card">
+    <div>
+      <h1>نظام شؤون موظفي العيادة</h1>
+      <p class="sub">سجّل الدخول بحسابك الشخصي للوصول إلى قاعدة البيانات اللحظية</p>
+    </div>
+    <div id="cfgWarn" class="auth-cfg">
+      <b>تنبيه الإعداد لأول مرة:</b> افتح هذا الملف بمحرر نصوص (مثل Notepad) والصق بيانات مشروع Firebase داخل المتغير <code>FIREBASE_CONFIG</code> ثم احفظ وأعد فتح الصفحة.
+    </div>
+    <div id="authErr" class="auth-err" role="alert"></div>
+    <div id="authOk" class="auth-ok" role="status"></div>
+    <form id="loginForm">
+      <label class="fld" for="loginEmail"><span>البريد الإلكتروني</span><input id="loginEmail" type="email" autocomplete="username" required placeholder="name@clinic.com" dir="ltr"></label>
+      <label class="fld" for="loginPass"><span>كلمة المرور</span><input id="loginPass" type="password" autocomplete="current-password" required placeholder="••••••••" dir="ltr"></label>
+      <button class="btn" id="loginBtn" type="submit">تسجيل الدخول</button>
+    </form>
+    <button class="link-btn" id="forgotBtn" type="button">نسيت كلمة المرور؟ أرسل رابط إعادة التعيين</button>
+  </div>
+</section>
+<header id="shellmark" class="hidden">
+  <div class="top">
+    <h1 id="clinic">نظام شؤون الموظفين – FN Clinic</h1>
+    <div class="top-r">
+      <span id="syncPill" class="sync-pill"><i></i><span id="syncTxt">متصل لحظياً</span></span>
+      <small id="asof"></small>
+      <button class="btn-out" id="logoutBtn" type="button" data-act="logout">تسجيل الخروج</button>
+    </div>
+  </div>
+  <nav id="nav" aria-label="أقسام النظام"><a href="#dashboard">لوحة التحكم</a><a href="#employees">الموظفون</a><a href="#hist">سجل الرواتب</a><a href="#payroll">كشف الرواتب</a><a href="#approvals">الاعتمادات</a><a href="#advances">السلف</a><a href="#pen">الجزاءات</a><a href="#leaves">الإجازات</a><a href="#plan">خطة الإجازات</a><a href="#docs">المستندات</a><a href="#balances">الأرصدة ونهاية الخدمة</a><a href="#profile">ملف الموظف</a><a href="#payslip">قسيمة الراتب</a><a href="#reports">التقارير</a><a href="#audit">سجل التعديلات</a><a href="#admin">الإعدادات والصلاحيات</a><a href="#data" aria-current="page">Excel والنسخ</a></nav>
+</header>
+<main id="app" class="hidden"></main>
+<div id="modal"></div>
+<script id="snap" type="application/json">{"clinic":"FN Clinic","currency":"د.ك","asof":"2026-11-21","depts":["الإدارة","الأطباء","التمريض","الاستقبال","التجميل","الخدمات"],"ltypes":["سنوية","مرضية","بدون راتب","طارئة","أمومة","أخرى"],"emps":[{"id":1,"name":"DR.REHAM F H ALSHATI","job":"OWNER","dept":"الإدارة","hire":"2024-01-01","status":"على رأس العمل"},{"id":2,"name":"DR.AMAL A T ALMUQATE","job":"OWNER","dept":"الإدارة","hire":"2024-01-01","status":"على رأس العمل"},{"id":3,"name":"SHAIMAA ABDELGAWWAD MOHAMED TABAK","job":"DERMA DOCTOR","dept":"الأطباء","hire":"2024-07-01","status":"على رأس العمل"},{"id":7,"name":"OHOUD JABBAR FLAIH HUSSAIN","job":"MANAGER","dept":"الإدارة","hire":"2024-05-01","status":"على رأس العمل"},{"id":9,"name":"SOUMYA JIDHU","job":"NURSE","dept":"التمريض","hire":"2024-08-28","status":"على رأس العمل"},{"id":10,"name":"AISWARYA THETTARI PRADEEP","job":"NURSE","dept":"التمريض","hire":"2025-01-01","status":"على رأس العمل"},{"id":11,"name":"LAILANI MIRA MONDEJAR","job":"NURSE","dept":"التمريض","hire":"2025-03-13","status":"على رأس العمل"},{"id":13,"name":"CHRISTINA SHAHATA BADER","job":"RECEPTION","dept":"الاستقبال","hire":"2025-04-17","status":"على رأس العمل"},{"id":15,"name":"DEELA JUNE NAIG SALAZAR","job":"NURSE","dept":"التمريض","hire":"2025-05-24","status":"على رأس العمل"},{"id":16,"name":"PRIYANKA RAJAVELU","job":"NURSE","dept":"التمريض","hire":"2025-08-09","status":"على رأس العمل"},{"id":17,"name":"MOSTAFA MOHAMED ABDELRAHEEM MOHAMED","job":"DERMA DOCTOR","dept":"الأطباء","hire":"2025-10-25","status":"على رأس العمل"},{"id":19,"name":"NISHA KAMAL","job":"NURSE","dept":"التمريض","hire":"2025-10-27","status":"على رأس العمل"},{"id":20,"name":"YOUSTINA ELDABEA MIKHAIEL ZAKY","job":"RECEPTION","dept":"الاستقبال","hire":"2025-10-26","status":"على رأس العمل"},{"id":22,"name":"AHMED HEGAG","job":"ACCOUNTANT","dept":"الإدارة","hire":"2025-11-23","status":"على رأس العمل"},{"id":23,"name":"REDA","job":"CHEF ACC","dept":"الإدارة","hire":null,"status":"على رأس العمل"},{"id":24,"name":"MARY GERGES FEKRY MEHANY","job":"RECEPTION","dept":"الاستقبال","hire":"2026-03-07","status":"على رأس العمل"},{"id":25,"name":"EID","job":"MANDOUB","dept":"الخدمات","hire":null,"status":"على رأس العمل"},{"id":26,"name":"MOHAMMED ALQENAEE","job":"GP DOCTOR","dept":"الأطباء","hire":null,"status":"على رأس العمل"},{"id":27,"name":"SHANI RAJU","job":"NURSE","dept":"التمريض","hire":"2026-06-16","status":"على رأس العمل"},{"id":28,"name":"ROMELLA","job":"NURSE","dept":"التمريض","hire":"2026-07-18","status":"على رأس العمل"},{"id":29,"name":"REMIYA","job":"NURSE","dept":"التمريض","hire":"2026-07-18","status":"على رأس العمل"}],"lv":[{"id":19,"type":"بدون راتب","from":"2026-04-02","to":"2026-05-01","days":30},{"id":13,"type":"سنوية","from":"2026-06-21","to":"2026-06-30","days":9},{"id":13,"type":"سنوية","from":"2026-07-01","to":"2026-07-31","days":25.26},{"id":15,"type":"بدون راتب","from":"2026-06-14","to":"2026-07-19","days":36},{"id":9,"type":"سنوية","from":"2026-07-05","to":"2026-07-16","days":11},{"id":23,"type":"بدون راتب","from":"2026-07-06","to":"2026-08-04","days":30},{"id":17,"type":"سنوية","from":"2026-08-08","to":"2026-08-31","days":21},{"id":7,"type":"سنوية","from":"2026-08-16","to":"2026-08-31","days":12},{"id":17,"type":"سنوية","from":"2026-09-01","to":"2026-09-05","days":3},{"id":7,"type":"سنوية","from":"2026-09-01","to":"2026-09-10","days":7},{"id":9,"type":"سنوية","from":"2026-09-07","to":"2026-09-07","days":1},{"id":10,"type":"سنوية","from":"2026-09-10","to":"2026-09-10","days":1},{"id":15,"type":"سنوية","from":"2026-09-10","to":"2026-09-10","days":1},{"id":29,"type":"بدون راتب","from":"2026-09-02","to":"2026-09-02","days":1},{"id":29,"type":"بدون راتب","from":"2026-09-19","to":"2026-09-20","days":2},{"id":22,"type":"بدون راتب","from":"2026-09-05","to":"2026-09-19","days":13},{"id":9,"type":"سنوية","from":"2026-09-29","to":"2026-09-29","days":1},{"id":9,"type":"سنوية","from":"2026-10-07","to":"2026-10-07","days":1},{"id":9,"type":"سنوية","from":"2026-10-18","to":"2026-10-19","days":2},{"id":10,"type":"سنوية","from":"2026-10-03","to":"2026-10-03","days":1},{"id":10,"type":"سنوية","from":"2026-10-07","to":"2026-10-07","days":1},{"id":10,"type":"سنوية","from":"2026-10-20","to":"2026-10-22","days":3},{"id":11,"type":"سنوية","from":"2026-10-01","to":"2026-10-01","days":1},{"id":7,"type":"سنوية","from":"2026-10-15","to":"2026-10-15","days":1},{"id":19,"type":"سنوية","from":"2026-10-05","to":"2026-10-22","days":16},{"id":16,"type":"أمومة","from":"2026-10-09","to":"2026-10-31","days":19},{"id":28,"type":"طارئة","from":"2026-10-08","to":"2026-10-22","days":3},{"id":28,"type":"بدون راتب","from":"2026-10-08","to":"2026-10-22","days":9}],"plan":[],"months":[{"y":2025,"m":5,"n":9,"gross":12750,"net":10198.923},{"y":2025,"m":6,"n":9,"gross":12750,"net":12679.5},{"y":2025,"m":7,"n":9,"gross":12750,"net":12727},{"y":2025,"m":8,"n":10,"gross":13300,"net":13047.077},{"y":2025,"m":9,"n":10,"gross":13300,"net":13101.5},{"y":2025,"m":10,"n":13,"gross":17100,"net":14183.192},{"y":2025,"m":11,"n":13,"gross":17100,"net":16648.442},{"y":2026,"m":1,"n":15,"gross":17435,"net":17420},{"y":2026,"m":2,"n":15,"gross":17435,"net":17420},{"y":2026,"m":3,"n":16,"gross":17919.135,"net":17809.905},{"y":2026,"m":4,"n":17,"gross":17835,"net":17173},{"y":2026,"m":5,"n":18,"gross":19835,"net":19805.3},{"y":2026,"m":6,"n":19,"gross":20510,"net":19594.046},{"y":2026,"m":7,"n":21,"gross":21910,"net":20541.471},{"y":2026,"m":8,"n":21,"gross":21958.846,"net":19064.265},{"y":2026,"m":9,"n":21,"gross":22180,"net":21338.587},{"y":2026,"m":10,"n":21,"gross":22180,"net":20635.8}]}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script id="firebase-config">
+/* =====================================================================
+   إعدادات قاعدة البيانات (Firebase Config)
+   استبدل القيم التالية ببيانات مشروعك من لوحة تحكم Firebase:
+   Project Settings -> General -> Your apps -> SDK setup and configuration
+   ===================================================================== */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBGCJT0WoA0yOdZgERG9HUkIqnt36X9QAE",
+  authDomain: "fn-clinic-hr.firebaseapp.com",
+  projectId: "fn-clinic-hr",
+  storageBucket: "fn-clinic-hr.firebasestorage.app",
+  messagingSenderId: "980199750452",
+  appId: "1:980199750452:web:28a9ebb0d29b5f914f8361"
+};
+</script>
+<script id="main">
+let D = {settings: {depts: [], ltypes: ['سنوية'], res: [0, 0, 0, 0]}, emps: [], pay: [], adv: [], lv: [], plan: [], docs: [], hist: [], pen: [], asof: null};
+let S = D.settings, CUR = '', empById = {}, BAL = {}, years = [new Date().getFullYear()];
+const MONTHS = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+const VIEWS = [['dashboard','لوحة التحكم'],['employees','الموظفون'],['payroll','كشف الرواتب'],['advances','السلف'],['leaves','الإجازات'],['plan','خطة الإجازات'],['balances','الأرصدة ونهاية الخدمة'],['profile','ملف الموظف'],['payslip','قسيمة الراتب'],['data','تصدير ورفع Excel']];
+const ACTIVE = 'على رأس العمل';
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money = v => (Number(v) || 0).toLocaleString('en-US', {minimumFractionDigits: 3, maximumFractionDigits: 3});
+const num = (v, d = 1) => (Number(v) || 0).toLocaleString('en-US', {minimumFractionDigits: d, maximumFractionDigits: d});
+const dt = s => { if (!s) return '—'; const [y, m, d] = s.split('-'); return `${d}/${m}/${y}`; };
+const day = s => new Date(s + 'T00:00:00Z').getTime();
+const sum = (arr, f) => arr.reduce((a, x) => a + (Number(f(x)) || 0), 0);
+const nameOf = id => empById[id] ? empById[id].name : 'غير موجود';
+const today = new Date().toISOString().slice(0, 10);
+
+function balance(e) {
+  const calc = e.end || today;
+  const years = e.hire ? Math.max(0, (day(calc) - day(e.hire)) / 864e5 / 365) : 0;
+  const total = e.basic + e.house + e.trans + e.other;
+  const base = S.base === 'الأساسي' ? e.basic : total;
+  const accStart = e.hire && S.lstart ? Math.max(day(e.hire), day(S.lstart)) : (e.hire ? day(e.hire) : day(calc));
+  const accrued = e.hire ? Math.max(0, (day(calc) - accStart) / 864e5 / 365) * S.ldays : 0;
+  const mine = D.lv.filter(l => l.id === e.id);
+  const taken = sum(mine.filter(l => l.type === S.ltypes[0]), l => l.days);
+  const lbal = accrued + e.open - taken;
+  const lval = lbal * total / S.wd;
+  const eos = Math.min(S.cap * base, (years <= 5 ? years * S.d1 : 5 * S.d1 + (years - 5) * S.d2) * base / S.wd);
+  const pct = years < 3 ? S.res[0] : years < 5 ? S.res[1] : years < 10 ? S.res[2] : S.res[3];
+  const advTotal = sum(D.adv.filter(a => a.id === e.id), a => a.amount);
+  const repaid = sum(D.pay.filter(p => p.id === e.id), p => p.advded);
+  const byType = t => sum(mine.filter(l => l.type === t), l => l.days);
+  return {calc, years, total, accrued, taken, lbal, lval, eos, pct, eosRes: eos * pct, advTotal, repaid, advBal: advTotal - repaid,
+          net: eos + lval - (advTotal - repaid), byType};
+}
+const st = {y: years[0], m: 1, emp: null, fy: years[0], fm: 0, fe: 0, init: false, py: new Date().getFullYear(), pm: new Date().getMonth() + 1, dstat: '', acol: '', ry: 0, rm: 0, sreason: 'إنهاء من صاحب العمل', sdate: ''};
+function setData(d) {
+  for (const k of ['plan', 'docs', 'hist', 'pen', 'adv', 'lv']) d[k] = d[k] || [];
+  D = d; S = D.settings; CUR = S.currency || '';
+  empById = Object.fromEntries(D.emps.map(e => [e.id, e]));
+  D.pay.forEach(p => { const e = empById[p.id]; p.name = e ? e.name : 'غير موجود'; p.dept = e ? e.dept : ''; });
+  BAL = Object.fromEntries(D.emps.map(e => [e.id, balance(e)]));
+  const ys = D.pay.map(p => p.y), cy = new Date().getFullYear(), lo = ys.length ? Math.min(...ys) : cy, hi = Math.max(cy, ...ys);
+  years = []; for (let y = lo; y <= hi; y++) years.push(y);
+  if (!st.init || !years.includes(st.y)) {
+    const lp = D.pay.reduce((a, p) => (p.y * 100 + p.m > a.y * 100 + a.m ? p : a), {y: years[0], m: 1});
+    st.y = st.fy = lp.y; st.m = st.fm = lp.m;
+  }
+  if (!years.includes(st.fy)) st.fy = st.y;
+  if (!empById[st.emp]) st.emp = D.emps[0] ? D.emps[0].id : null;
+  st.init = D.pay.length > 0;
+}
+
+const PSTATS = ['مخطط', 'معتمد', 'تمت', 'ملغاة'];
+const ymd = (y, m, d) => `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+const dim = (y, m) => new Date(Date.UTC(y, m, 0)).getUTCDate();
+const ovl = (f, t, a, b) => { if (!f || !t) return 0; const s = Math.max(day(f), day(a)), e = Math.min(day(t), day(b)); return e >= s ? (e - s) / 864e5 + 1 : 0; };
+function yearBoard(Y, act, live) {
+  const y0 = Date.UTC(Y, 0, 1), nd = (Date.UTC(Y + 1, 0, 1) - y0) / 864e5, W = 2, H = 18, TW = Math.round(nd * W);
+  const x = iso => (day(iso) - y0) / 864e5;                 // day index from 1 Jan
+  const X = (i, n) => TW - (i + n) * W;                     // right-to-left: January on the right
+  const clip = (f, t) => { const a = Math.max(0, x(f)), b = Math.min(nd - 1, x(t)); return b >= a ? [a, b - a + 1] : null; };
+  let bg = '', head = '';
+  for (let m = 0; m < 12; m++) {
+    const a = (Date.UTC(Y, m, 1) - y0) / 864e5, n = dim(Y, m + 1);
+    if (m % 2 === 0) bg += `<rect class="mb" x="${X(a, n)}" y="0" width="${n * W}" height="${H}"/>`;
+    bg += `<line class="ml" x1="${X(a, 0)}" x2="${X(a, 0)}" y1="0" y2="${H}"/>`;
+    head += `<text x="${X(a, n) + n * W / 2}" y="14" text-anchor="middle">${MONTHS[m]}</text>`;
+  }
+  const t = x(today), tl = t >= 0 && t < nd ? `<line class="today" x1="${X(t, 0.5)}" x2="${X(t, 0.5)}" y1="0" y2="${H}"/>` : '';
+  const tip = (r, st) => `<title>${esc(r.type || '')} · ${dt(r.from)} – ${dt(r.to)} · ${esc(st)}${r.days ? ' · ' + num(r.days) + ' يوم' : ''}${r.note ? ' · ' + esc(r.note) : ''}</title>`;
+  let rows = `<div class="nm"></div><svg width="${TW}" height="20">${head}</svg><div class="tot">أيام</div>`;
+  for (const e of act) {
+    let bars = '', days = new Set();
+    const put = (r, cls, st) => { if (!r.from || !r.to) return; const c = clip(r.from, r.to); if (!c) return;
+      for (let i = 0; i < c[1]; i++) days.add(c[0] + i);
+      bars += `<rect class="bar-${cls}" x="${X(c[0], c[1]) + 0.5}" y="3" width="${Math.max(c[1] * W - 1, 2)}" height="${H - 6}" rx="2">${tip(r, st)}</rect>`; };
+    live.filter(p => p.id === e.id && p.status === 'مخطط').forEach(p => put(p, 'p', 'مخططة'));
+    live.filter(p => p.id === e.id && p.status === 'معتمد').forEach(p => put(p, 'a', 'معتمدة'));
+    live.filter(p => p.id === e.id && p.status === 'تمت').forEach(p => put(p, 'f', 'تمت'));
+    D.lv.filter(l => l.id === e.id).forEach(l => put(l, 'f', 'تمت'));
+    rows += `<div class="nm">${esc(e.name)}</div><svg width="${TW}" height="${H}">${bg}${bars}${tl}</svg><div class="tot">${days.size || ''}</div>`;
+  }
+  return `<div class="yb">${rows}</div>`;
+}
+function planYears() {
+  const ys = D.plan.flatMap(p => [p.from, p.to]).filter(Boolean).map(x => +x.slice(0, 4)), cy = new Date().getFullYear();
+  const lo = Math.min(2026, cy, ...ys), hi = Math.max(2027, cy + 1, ...ys), o = [];
+  for (let y = lo; y <= hi; y++) o.push(y);
+  return o;
+}
+const opt = (v, label, cur) => `<option value="${esc(v)}"${String(v) === String(cur) ? ' selected' : ''}>${esc(label)}</option>`;
+const sel = (id, label, options) => `<label for="${id}">${label}<select id="${id}" data-k="${id}">${options}</select></label>`;
+const yearOpts = cur => years.map(y => opt(y, y, cur)).join('');
+const monthOpts = (cur, all) => (all ? opt(0, 'كل الشهور', cur) : '') + MONTHS.map((m, i) => opt(i + 1, m, cur)).join('');
+const empOpts = (cur, all) => (all ? opt(0, 'كل الموظفين', cur) : '') + D.emps.map(e => opt(e.id, e.name, cur)).join('');
+const tile = (label, value, unit, cls = '') => `<div class="tile ${cls}"><span>${label}</span><b>${value}</b>${unit ? `<i>${esc(unit)}</i>` : ''}</div>`;
+const kv = (label, value, hi) => `<div${hi ? ' class="hi"' : ''}><span>${label}</span><b>${value === '' || value == null ? '—' : value}</b></div>`;
+const table = (heads, rows, foot) => rows.length ? `<div class="scroll"><table><thead><tr>${heads.map(h => `<th${h[1] ? ' class="n"' : ''}>${h[0]}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody>${foot ? `<tfoot>${foot}</tfoot>` : ''}</table></div>` : '<p class="empty">لا توجد بيانات</p>';
+const td = v => `<td>${v}</td>`, tn = v => `<td class="n">${v}</td>`;
+const status = s => `<span class="pill${s === ACTIVE ? '' : ' off'}">${esc(s || '—')}</span>`;
+
+function chart(rows) {
+  const W = 720, H = 250, L = 8, R = 62, T = 10, B = 28, max = Math.max(1, ...rows.map(r => r.gross));
+  const step = Math.pow(10, Math.floor(Math.log10(max))), top = Math.ceil(max / step) * step;
+  const pw = W - L - R, ph = H - T - B, slot = pw / 12, bw = slot * 0.32;
+  let g = '';
+  for (let i = 0; i <= 4; i++) {
+    const y = T + ph - ph * i / 4;
+    g += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${W - R + 6}" y="${y + 4}" direction="ltr">${(top * i / 4).toLocaleString('en-US')}</text>`;
+  }
+  rows.forEach((r, i) => {
+    const x = W - R - slot * (i + 1), hg = ph * r.gross / top, hn = ph * r.net / top;
+    g += `<rect x="${x + slot / 2}" y="${T + ph - hg}" width="${bw}" height="${hg}" rx="2" fill="var(--bar2)"><title>${MONTHS[i]} – الاستحقاقات ${money(r.gross)}</title></rect>`;
+    g += `<rect x="${x + slot / 2 - bw}" y="${T + ph - hn}" width="${bw}" height="${hn}" rx="2" fill="var(--accent)"><title>${MONTHS[i]} – الصافي ${money(r.net)}</title></rect>`;
+    g += `<text x="${x + slot / 2}" y="${H - 9}" text-anchor="middle">${MONTHS[i]}</text>`;
+  });
+  return `<div class="scroll"><svg viewBox="0 0 ${W} ${H}" style="min-width:560px;width:100%" role="img" aria-label="الاستحقاقات والصافي شهرياً">${g}</svg></div>
+  <div class="legend"><span><i style="background:var(--bar2)"></i>الاستحقاقات</span><span><i style="background:var(--accent)"></i>الصافي</span></div>`;
+}
+
+const R = {
+  dashboard() {
+    const cur = D.pay.filter(p => p.y === st.y && p.m === st.m), allB = Object.values(BAL), bals = D.emps.filter(e => e.status === ACTIVE).map(e => BAL[e.id]);
+    const monthly = MONTHS.map((_, i) => { const r = D.pay.filter(p => p.y === st.y && p.m === i + 1); return {gross: sum(r, p => p.gross), ded: sum(r, p => p.totded), net: sum(r, p => p.net)}; });
+    const net = sum(cur, p => p.net);
+    const depts = S.depts.map(d => ({d, n: D.emps.filter(e => e.dept === d && e.status === ACTIVE).length, net: sum(cur.filter(p => p.dept === d), p => p.net)})).filter(x => x.n || x.net);
+    const maxD = Math.max(1, ...depts.map(x => x.net));
+    return `<div class="controls">${sel('y', 'السنة', yearOpts(st.y))}${sel('m', 'الشهر', monthOpts(st.m))}</div>
+    <div class="tiles">
+      ${tile('الموظفون على رأس العمل', D.emps.filter(e => e.status === ACTIVE).length)}
+      ${tile('استحقاقات ' + MONTHS[st.m - 1], money(sum(cur, p => p.gross)), CUR)}
+      ${tile('صافي رواتب ' + MONTHS[st.m - 1], money(net), CUR)}
+      ${tile('أرصدة السلف القائمة', money(sum(allB, b => b.advBal)), CUR, 'gold')}
+      ${tile('مخصص نهاية الخدمة', money(sum(bals, b => b.eos)), CUR, 'gold')}
+      ${tile('قيمة أرصدة الإجازات', money(sum(bals, b => b.lval)), CUR, 'gold')}
+    </div>
+    ${(() => { const dx = D.docs.map(docState), ex = dx.filter(x => x.s === 'منتهي').length, so = dx.filter(x => x.s === 'ينتهي قريباً').length, pc = pendingCount();
+      const ch = Object.entries(CLOSE).filter(([k, c]) => { if (!LOCKED.includes(c.status)) return false; const [y, m] = k.split('-').map(Number), mn = monthNet(y, m); return mn.count !== c.count || Math.abs(mn.net - (c.net || 0)) > 0.001; }).length;
+      const items = [ex && `<a href="#docs" class="alert bad">${ex} مستند منتهي</a>`, so && `<a href="#docs" class="alert warn2">${so} مستند ينتهي قريباً</a>`, pc && `<a href="#approvals" class="alert info">${pc} بانتظار اعتمادك</a>`, ch && `<a href="#approvals" class="alert bad">${ch} شهر تغيّر بعد الاعتماد</a>`].filter(Boolean);
+      return items.length ? `<div class="alerts">${items.join('')}</div>` : ''; })()}
+    <div class="panel"><h3>الرواتب الشهرية لسنة ${st.y}</h3>${chart(monthly)}</div>
+    <div class="grid2">
+      <div class="panel"><h3>حسب القسم – ${MONTHS[st.m - 1]} ${st.y}</h3>
+        ${table([['القسم'], ['الموظفون', 1], ['صافي الرواتب', 1], ['النسبة', 1], ['']], depts.map(x => `<tr>${td(esc(x.d))}${tn(x.n)}${tn(money(x.net))}${tn(net ? num(x.net / net * 100) + '%' : '—')}<td style="min-width:90px"><div class="bar" style="width:${x.net / maxD * 100}%"></div></td></tr>`))}
+      </div>
+      <div class="panel"><h3>ملخص شهور ${st.y}</h3>
+        ${table([['الشهر'], ['الاستحقاقات', 1], ['الخصومات', 1], ['الصافي', 1]], monthly.map((r, i) => r.gross ? `<tr>${td(MONTHS[i])}${tn(money(r.gross))}${tn(money(r.ded))}${tn(money(r.net))}</tr>` : '').filter(Boolean),
+          `<tr><td>الإجمالي</td>${tn(money(sum(monthly, r => r.gross)))}${tn(money(sum(monthly, r => r.ded)))}${tn(money(sum(monthly, r => r.net)))}</tr>`)}
+      </div>
+    </div>
+    <div class="panel"><h3>ملخص كل السنوات</h3>
+      ${table([['السنة'], ['شهور مسجلة', 1], ['الاستحقاقات', 1], ['الخصومات', 1], ['الصافي', 1]], years.map(y => { const r = D.pay.filter(p => p.y === y); return r.length ? `<tr>${td(y)}${tn(new Set(r.map(p => p.m)).size)}${tn(money(sum(r, p => p.gross)))}${tn(money(sum(r, p => p.totded)))}${tn('<b>' + money(sum(r, p => p.net)) + '</b>')}</tr>` : ''; }).filter(Boolean))}
+      <p class="note">كل سنة جديدة تظهر هنا وفي قوائم الاختيار تلقائياً بمجرد إضافة صفوف رواتبها في ملف Excel ورفعه.</p>
+    </div>`;
+  },
+  employees() {
+    return `<div class="row between"><h2>سجل الموظفين</h2>${addBtn('emps', 'موظف')}</div><div class="panel">${table(
+      [['الرقم'], ['الاسم'], ['الوظيفة'], ['القسم'], ['الجنسية'], ['تاريخ التعيين'], ['الحالة'], ['تاريخ النهاية'], ['الأساسي', 1], ['سكن', 1], ['مواصلات', 1], ['أخرى', 1], ['الإجمالي', 1], ...actHead('emps')],
+      D.emps.map(e => `<tr>${td(e.id)}<td><a href="#profile" data-emp="${e.id}" style="color:var(--accent);font-weight:600">${esc(e.name)}</a></td>${td(esc(e.job))}${td(esc(e.dept))}${td(esc(e.nat))}${td(dt(e.hire))}${td(status(e.status))}${td(e.end ? dt(e.end) : '')}${tn(money(e.basic))}${tn(money(e.house))}${tn(money(e.trans))}${tn(money(e.other))}${tn('<b>' + money(BAL[e.id].total) + '</b>')}${rowActs('emps', e.id)}</tr>`),
+      (a => `<tr><td colspan="8">إجمالي رواتب من هم على رأس العمل (${a.length})</td>${tn(money(sum(a, e => e.basic)))}${tn(money(sum(a, e => e.house)))}${tn(money(sum(a, e => e.trans)))}${tn(money(sum(a, e => e.other)))}${tn(money(sum(a, e => BAL[e.id].total)))}${may('emps') ? '<td></td>' : ''}</tr>`)(D.emps.filter(e => e.status === ACTIVE)))}
+      <p class="note">اضغط على اسم الموظف لفتح ملفه الكامل.</p></div>`;
+  },
+  payroll() {
+    const rows = D.pay.filter(p => p.y === st.fy && (!st.fm || p.m === st.fm) && (!st.fe || p.id === st.fe));
+    const cols = ['basic', 'house', 'trans', 'other', 'ot', 'bonus', 'gross', 'absded', 'advded', 'otherded', 'bank', 'totded', 'net'];
+    const cs = st.fm ? (CLOSE[ymKey(st.fy, st.fm)] || {status: 'مسودة'}) : null, lk = st.fm && isLocked(st.fy, st.fm);
+    return `<div class="row between"><h2>كشف الرواتب</h2><div class="row">${st.fm && may('pay') && !lk ? `<button class="btn" data-act="gen"${io.busy ? ' disabled' : ''}>إنشاء كشف ${MONTHS[st.fm - 1]} ${st.fy}</button>` : ''}${st.fm && !lk ? addBtn('pay', 'صف') : ''}</div></div>
+    <div class="controls">${sel('fy', 'السنة', yearOpts(st.fy))}${sel('fm', 'الشهر', monthOpts(st.fm, true))}${sel('fe', 'الموظف', empOpts(st.fe, true))}${cs ? `<span class="stbox">حالة الشهر: ${pillSt(cs.status)} <a href="#approvals">الاعتمادات</a></span>` : ''}</div>
+    ${!st.fm && may('pay') ? '<p class="note">اختر شهراً لإنشاء كشفه أو إضافة صفوف له.</p>' : ''}
+    <div class="panel">${table([['الشهر'], ['الموظف'], ['القسم'], ['الأساسي', 1], ['سكن', 1], ['مواصلات', 1], ['أخرى', 1], ['إضافي', 1], ['مكافآت', 1], ['الاستحقاقات', 1], ['خصم غياب', 1], ['قسط سلفة', 1], ['خصومات أخرى', 1], ['عمولة بنك', 1], ['إجمالي الخصومات', 1], ['الصافي', 1], ['طريقة الدفع'], ['ملاحظات'], ...actHead('pay')],
+      rows.map(p => `<tr>${td(MONTHS[p.m - 1] + ' ' + p.y)}${td(esc(p.name))}${td(esc(p.dept))}${cols.map(c => tn(c === 'net' || c === 'gross' ? '<b>' + money(p[c]) + '</b>' : money(p[c]))).join('')}${td(esc(p.method))}<td style="white-space:normal;min-width:220px">${esc(p.note)}</td>${rowActs('pay', p.y + '|' + p.m + '|' + p.id, {locked: isLocked(p.y, p.m)})}</tr>`),
+      `<tr><td colspan="3">الإجمالي (${rows.length} صف)</td>${cols.map(c => tn(money(sum(rows, p => p[c])))).join('')}<td></td><td></td>${may('pay') ? '<td></td>' : ''}</tr>`)}
+    <p class="note">«إنشاء كشف الشهر» يضيف صفاً لكل موظف على رأس العمل بالراتب الساري من «سجل الرواتب»، وقسط السلفة، والجزاءات، وأيام الإجازة بدون راتب في ذلك الشهر. بعدها عدّل الإضافي والمكافآت والغياب لكل موظف، ثم أرسل الشهر للاعتماد.</p></div>`;
+  },
+  advances() {
+    return `<div class="row between"><h2>سجل السلف</h2>${addBtn('adv', 'سلفة')}</div>
+    <div class="tiles">${tile('إجمالي السلف', money(sum(D.adv, a => a.amount)), CUR)}${tile('المسدد', money(sum(Object.values(BAL), b => b.repaid)), CUR)}${tile('الرصيد القائم', money(sum(Object.values(BAL), b => b.advBal)), CUR, 'gold')}</div>
+    <div class="panel"><h3>السلف المسجلة</h3>${table([['التاريخ'], ['الموظف'], ['المبلغ', 1], ['الأقساط', 1], ['القسط الشهري', 1], ['ملاحظات'], ...actHead('adv')],
+      D.adv.map(a => `<tr>${td(dt(a.date))}${td(esc(nameOf(a.id)))}${tn(money(a.amount))}${tn(a.n || '—')}${tn(a.n ? money(a.amount / a.n) : '—')}${td(esc(a.note))}${rowActs('adv', a.k)}</tr>`))}
+      <p class="note">القسط يُخصم تلقائياً عند «إنشاء كشف الشهر» حتى تُسدد السلفة.</p></div>
+    <div class="panel"><h3>الرصيد لكل موظف</h3>${table([['الموظف'], ['إجمالي السلف', 1], ['المسدد', 1], ['المتبقي', 1]],
+      D.emps.filter(e => BAL[e.id].advTotal).map(e => `<tr>${td(esc(e.name))}${tn(money(BAL[e.id].advTotal))}${tn(money(BAL[e.id].repaid))}${tn('<b>' + money(BAL[e.id].advBal) + '</b>')}</tr>`))}</div>`;
+  },
+  leaves() {
+    return `<div class="row between"><h2>الإجازات</h2>${addBtn('lv', 'إجازة تمت')}</div>
+    <div class="panel"><h3>رصيد الإجازات السنوية</h3>${table([['الموظف'], ['رصيد افتتاحي', 1], ['مكتسب', 1], ['مستخدم', 1], ['الرصيد (يوم)', 1], ['قيمته', 1]],
+      D.emps.filter(e => e.status === ACTIVE).map(e => { const b = BAL[e.id]; return `<tr>${td(esc(e.name))}${tn(num(e.open))}${tn(num(b.accrued))}${tn(num(b.taken))}${tn(`<b class="${b.lbal < 0 ? 'neg' : ''}">${num(b.lbal)}</b>`)}${tn(money(b.lval))}</tr>`; }))}
+      <p class="note">الاكتساب محسوب من ${dt(S.lstart)} بمعدل ${S.ldays} يوم في السنة.</p></div>
+    <div class="panel"><h3>سجل الإجازات</h3>${table([['الموظف'], ['النوع'], ['من'], ['إلى'], ['الأيام', 1], ['ملاحظات'], ['']],
+      D.lv.slice().sort((a, b) => (b.from || '').localeCompare(a.from || '')).map(l => `<tr>${td(esc(nameOf(l.id)))}${td(`<span class="pill">${esc(l.type)}</span>`)}${td(dt(l.from))}${td(dt(l.to))}${tn(num(l.days))}${td(esc(l.note))}<td class="acts"><button class="mini" data-act="printlv:${l.k}">نموذج</button></td>${rowActs('lv', l.k)}</tr>`))}</div>`;
+  },
+  plan() {
+    const Y = st.py, M = st.pm, A = S.ltypes[0], live = D.plan.filter(p => p.status !== 'ملغاة');
+    const act = D.emps.filter(e => e.status === ACTIVE);
+    const rows = act.map(e => {
+      const mine = live.filter(p => p.id === e.id);
+      const ms = MONTHS.map((_, i) => sum(mine, p => ovl(p.from, p.to, ymd(Y, i + 1, 1), ymd(Y, i + 1, dim(Y, i + 1)))));
+      const taken = sum(D.lv.filter(l => l.id === e.id && l.type === A && l.from && l.from.slice(0, 4) === String(Y)), l => l.days);
+      const up = sum(mine.filter(p => p.type === A && p.status !== 'تمت' && p.to && p.to >= today), p => p.days);
+      const bal = BAL[e.id].lbal;
+      return {e, ms, tot: sum(ms, x => x), taken, bal, up, after: bal - up};
+    });
+    const mt = MONTHS.map((_, i) => sum(rows, r => r.ms[i]));
+    const nd = dim(Y, M), days = Array.from({length: nd}, (_, i) => i + 1);
+    const fri = d => new Date(Date.UTC(Y, M - 1, d)).getUTCDay() === 5;
+    const code = (id, d) => {
+      const x = ymd(Y, M, d), on = r => r.id === id && r.from && r.to && r.from <= x && r.to >= x;
+      if (D.lv.some(on) || live.some(p => p.status === 'تمت' && on(p))) return 'f';
+      if (live.some(p => p.status === 'معتمد' && on(p))) return 'a';
+      if (live.some(p => p.status === 'مخطط' && on(p))) return 'p';
+      return '';
+    };
+    const LBL = {f: 'ف', a: 'ع', p: 'م'};
+    const yb = yearBoard(Y, act, live);
+    const grid = act.map(e => ({e, c: days.map(d => code(e.id, d))}));
+    const cover = days.map((_, i) => grid.filter(g => g.c[i]).length);
+    const inYear = D.plan.filter(p => (p.from || '').slice(0, 4) <= String(Y) && (p.to || p.from || '').slice(0, 4) >= String(Y)).sort((a, b) => (a.from || '').localeCompare(b.from || ''));
+    return `<div class="row between"><h2>خطة الإجازات</h2><div class="row">${mayReq() ? '<button class="btn ghost" data-act="add:req">+ طلب إجازة</button>' : ''}${addBtn('plan', 'إجازة مخططة')}</div></div>
+    <div class="controls">${sel('py', 'السنة', planYears().map(y => opt(y, y, Y)).join(''))}${sel('pm', 'شهر الجدول اليومي', monthOpts(M))}</div>
+    <div class="tiles">
+      ${tile('أيام مخططة في ' + Y, num(sum(rows, r => r.tot), 0), 'يوم')}
+      ${tile('موظفون لهم خطة', rows.filter(r => r.tot).length + ' من ' + act.length)}
+      ${tile('أعلى شهر', Math.max(...mt) ? MONTHS[mt.indexOf(Math.max(...mt))] + ' (' + Math.max(...mt) + ' يوم)' : '—')}
+      ${tile('خطة أكبر من الرصيد', rows.filter(r => r.after < 0).length + ' موظف', '', rows.some(r => r.after < 0) ? 'gold' : '')}
+    </div>
+    <div class="panel"><h3>لوحة الإجازات السنوية – ${Y}</h3>
+      <div class="key"><span><i style="background:var(--gold)"></i>تمت</span><span><i style="background:var(--accent)"></i>معتمدة</span><span><i style="box-shadow:inset 0 0 0 2px var(--accent)"></i>مخططة</span><span><i style="background:var(--bad);width:3px"></i>اليوم</span></div>
+      <div class="scroll">${yb}</div>
+      <p class="note">كل شريط إجازة على أيامها. مرّر الماوس على الشريط لترى التفاصيل. الرقم في آخر الصف = أيام الإجازة في السنة.</p></div>
+    <div class="panel"><h3>الجدول اليومي – ${MONTHS[M - 1]} ${Y}</h3>
+      <div class="key"><span><i style="background:var(--gold)"></i>ف تمت</span><span><i style="background:var(--accent)"></i>ع معتمدة</span><span><i style="box-shadow:inset 0 0 0 2px var(--accent)"></i>م مخططة</span><span><i style="background:var(--line)"></i>جمعة</span></div>
+      <div class="scroll"><table class="cal"><thead><tr><th></th>${days.map(d => `<th class="d${fri(d) ? ' fri' : ''}">${d}<br>${'أحد اثن ثلا أرب خمي جمع سبت'.split(' ')[new Date(Date.UTC(Y, M - 1, d)).getUTCDay()]}</th>`).join('')}<th class="d">أيام</th></tr></thead>
+      <tbody>${grid.map(g => `<tr><td class="nm">${esc(g.e.name)}</td>${g.c.map((c, i) => `<td class="c ${c}${!c && fri(i + 1) ? ' fri' : ''}">${LBL[c] || ''}</td>`).join('')}<td class="cnt">${g.c.filter(Boolean).length || ''}</td></tr>`).join('')}
+      <tr><td class="nm">عدد الغائبين</td>${cover.map(n => `<td class="cnt${n >= 3 ? ' hot' : ''}">${n || ''}</td>`).join('')}<td></td></tr></tbody></table></div>
+      <p class="note">عدد الغائبين يظهر بالأحمر عندما يغيب 3 موظفين أو أكثر في نفس اليوم.</p></div>
+    <div class="panel"><h3>الأيام المخططة لكل موظف في كل شهر – ${Y}</h3>${table([['الموظف'], ...MONTHS.map(m => [m.slice(0, 5), 1]), ['المخطط', 1], ['سنوية تمت', 1], ['الرصيد', 1], ['سنوية قادمة', 1], ['بعد الخطة', 1]],
+      rows.map(r => `<tr>${td(esc(r.e.name))}${r.ms.map(v => `<td class="n ${v ? 'mon' : 'mz'}">${v ? num(v, 0) : '·'}</td>`).join('')}${tn('<b>' + (r.tot ? num(r.tot, 0) : '—') + '</b>')}${tn(r.taken ? num(r.taken) : '—')}${tn(num(r.bal))}${tn(r.up ? num(r.up) : '—')}${tn(`<b class="${r.after < 0 ? 'neg' : ''}">${num(r.after)}</b>`)}</tr>`),
+      `<tr><td>الإجمالي</td>${mt.map(v => tn(v ? num(v, 0) : '·')).join('')}${tn(num(sum(mt, x => x), 0))}<td colspan="5"></td></tr>`)}
+      <p class="note">الرصيد هو رصيد الإجازات السنوية اليوم. "سنوية قادمة" = الإجازات السنوية المخططة أو المعتمدة التي لم تنتهِ بعد. "بعد الخطة" بالأحمر يعني أن الخطة أكبر من الرصيد.</p></div>
+    <div class="panel"><h3>الإجازات المخططة في ${Y}</h3>${table([['الموظف'], ['النوع'], ['من'], ['إلى'], ['الأيام', 1], ['الحالة'], ['ملاحظات'], ['']],
+      inYear.map(p => `<tr>${td(esc(nameOf(p.id)))}${td(esc(p.type))}${td(dt(p.from))}${td(dt(p.to))}${tn(num(p.days))}${td(`<span class="pill st-${esc(p.status)}">${esc(p.status)}</span>`)}<td style="white-space:normal;min-width:200px">${esc(p.note)}</td><td class="acts"><button class="mini" data-act="printplan:${p.k}">نموذج</button></td>${rowActs('plan', p.k)}</tr>`))}
+      <p class="note">أضف الإجازة هنا مباشرة، أو قدّم «طلب إجازة» ليمر على المدير ثم الموارد البشرية ويظهر هنا معتمداً. عند أخذ الإجازة سجّلها في «الإجازات» وغيّر حالتها هنا إلى «تمت».</p></div>`;
+  },
+  balances() {
+    const heads = [['الموظف'], ['تاريخ التعيين'], ['مدة الخدمة (سنة)', 1], ['الراتب', 1], ['رصيد الإجازات (يوم)', 1], ['قيمة الإجازات', 1], ['نهاية الخدمة كاملة', 1], ['نسبة الاستقالة', 1], ['عند الاستقالة', 1], ['رصيد السلف', 1], ['صافي التسوية', 1]];
+    const row = e => { const b = BAL[e.id]; return `<tr>${td(esc(e.name))}${td(dt(e.hire))}${tn(num(b.years, 2))}${tn(money(b.total))}${tn(num(b.lbal))}${tn(money(b.lval))}${tn(money(b.eos))}${tn(Math.round(b.pct * 100) + '%')}${tn(money(b.eosRes))}${tn(money(b.advBal))}${tn('<b>' + money(b.net) + '</b>')}</tr>`; };
+    const act = D.emps.filter(e => e.status === ACTIVE), old = D.emps.filter(e => e.status !== ACTIVE), bs = act.map(e => BAL[e.id]);
+    return `<h2>الأرصدة ونهاية الخدمة</h2>
+    <div class="panel"><h3>الموظفون على رأس العمل</h3>${table(heads, act.map(row),
+      `<tr><td colspan="5">الإجمالي</td>${tn(money(sum(bs, b => b.lval)))}${tn(money(sum(bs, b => b.eos)))}<td></td>${tn(money(sum(bs, b => b.eosRes)))}${tn(money(sum(bs, b => b.advBal)))}${tn(money(sum(bs, b => b.net)))}</tr>`)}
+      <p class="note">محسوبة حتى تاريخ اليوم. صافي التسوية = نهاية الخدمة الكاملة + قيمة رصيد الإجازات − رصيد السلف. أرقام تقديرية تُراجع قبل أي تسوية نهائية.</p></div>
+    ${old.length ? `<div class="panel"><h3>منتهو الخدمة</h3>${table([['الموظف'], ['تاريخ التعيين'], ['تاريخ النهاية'], ['مدة الخدمة (سنة)', 1], ['الراتب', 1], ['رصيد إجازات محسوب (يوم)', 1], ['نهاية خدمة محسوبة', 1], ['ملاحظات التسوية']],
+      old.map(e => { const b = BAL[e.id]; return `<tr>${td(esc(e.name))}${td(dt(e.hire))}${td(dt(e.end))}${tn(num(b.years, 2))}${tn(money(b.total))}${tn(num(b.lbal))}${tn(money(b.eos))}<td style="white-space:normal;min-width:260px">${esc(e.note)}</td></tr>`; }))}
+      <p class="note">أرقام محسوبة بقواعد النظام حتى تاريخ النهاية للمقارنة فقط، ولا تدخل في إجماليات المخصصات. المبالغ المصروفة فعلاً مذكورة في الملاحظات.</p></div>` : ''}`;
+  },
+  profile() {
+    const e = empById[st.emp]; if (!e) return '<p class="empty">لا يوجد موظفون</p>';
+    const b = BAL[e.id];
+    const months = MONTHS.map((_, i) => D.pay.filter(p => p.id === e.id && p.y === st.y && p.m === i + 1));
+    const row = r => ({gross: sum(r, p => p.gross), extra: sum(r, p => p.ot + p.bonus), ded: sum(r, p => p.absded + p.otherded + p.bank), adv: sum(r, p => p.advded), net: sum(r, p => p.net)});
+    const ms = months.map(row), all = row(months.flat());
+    return `<div class="controls">${sel('emp', 'الموظف', empOpts(st.emp))}${sel('y', 'سنة الرواتب', yearOpts(st.y))}</div>
+    <h2>${esc(e.name)} ${status(e.status)}</h2>
+    <div class="panel"><h3>البيانات الشخصية والوظيفية</h3><div class="kv">
+      ${kv('رقم الموظف', e.id)}${kv('الوظيفة', esc(e.job))}${kv('القسم', esc(e.dept))}${kv('الجنسية', esc(e.nat))}${kv('الهاتف', esc(e.phone))}${kv('الرقم المدني', esc(e.civil))}
+      ${kv('تاريخ التعيين', dt(e.hire))}${kv('مدة الخدمة', num(b.years, 2) + ' سنة')}${e.end ? kv('تاريخ نهاية الخدمة', dt(e.end)) : ''}${kv('البنك', esc(e.bank))}${kv('رقم الحساب', esc(e.iban))}${e.note ? kv('ملاحظات', esc(e.note)) : ''}
+    </div></div>
+    <div class="panel"><h3>الراتب والبدلات الشهرية (${esc(CUR)})</h3><div class="kv">
+      ${kv('الأساسي', money(e.basic))}${kv('بدل سكن', money(e.house))}${kv('بدل مواصلات', money(e.trans))}${kv('بدلات أخرى', money(e.other))}${kv('إجمالي الراتب', money(b.total), 1)}
+    </div></div>
+    <div class="grid2">
+      <div class="panel"><h3>الإجازات</h3><div class="kv">
+        ${kv('الرصيد الحالي', num(b.lbal) + ' يوم', 1)}${kv('قيمة الرصيد', money(b.lval), 1)}${kv('رصيد افتتاحي', num(e.open))}${kv('مكتسب', num(b.accrued))}${kv('سنوية مستخدمة', num(b.taken))}
+        ${S.ltypes.slice(1).map(t => b.byType(t) ? kv(esc(t), num(b.byType(t)) + ' يوم') : '').join('')}
+      </div></div>
+      <div class="panel"><h3>نهاية الخدمة والسلف</h3><div class="kv">
+        ${kv('نهاية الخدمة كاملة', money(b.eos), 1)}${kv(`عند الاستقالة (${Math.round(b.pct * 100)}%)`, money(b.eosRes))}${kv('إجمالي السلف', money(b.advTotal))}${kv('المسدد', money(b.repaid))}${kv('رصيد السلف المتبقي', money(b.advBal), 1)}${kv('صافي التسوية التقديرية', money(b.net), 1)}
+      </div></div>
+    </div>
+    ${(() => { const s = settleCalc(e, st.sreason, st.sdate || today); return `<div class="panel"><div class="row between"><h3>التسوية النهائية حسب سبب انتهاء الخدمة</h3><button class="btn ghost" data-act="printsettle">تنزيل كشف نهاية الخدمة</button></div>
+      <div class="controls"><label for="sreason">السبب<select id="sreason" data-st="sreason">${REASONS.map(r => opt(r, r, st.sreason)).join('')}</select></label><label for="sdate">تاريخ انتهاء الخدمة<input type="date" id="sdate" data-st="sdate" value="${esc(st.sdate || today)}"></label></div>
+      <div class="kv">${kv('مدة الخدمة', num(s.yrs, 2) + ' سنة')}${kv('نهاية الخدمة الكاملة', money(s.full))}${kv('نسبة الاستحقاق', Math.round(s.pct * 100) + '%')}${kv('نهاية الخدمة المستحقة', money(s.due), 1)}
+        ${kv('رصيد الإجازات في التاريخ', num(s.lbal) + ' يوم')}${kv('قيمة رصيد الإجازات', money(s.lval))}${kv('السلف المتبقية', money(s.adv))}${kv('صافي التسوية النهائية', money(s.net), 1)}</div>
+      <p class="note">الاستقالة تأخذ نسبة حسب مدة الخدمة، والإنهاء من صاحب العمل وانتهاء العقد 100%. لا يشمل راتب الشهر الجاري أو بدل الإنذار.</p></div>`; })()}
+    ${(() => { const ds = D.docs.filter(d => d.id === e.id), ps = D.pen.filter(p => p.id === e.id), hs = D.hist.filter(h => h.id === e.id).sort((a, b) => (a.eff || '').localeCompare(b.eff || ''));
+      return `<div class="grid2"><div class="panel"><h3>المستندات</h3>${table([['المستند'], ['الانتهاء'], ['الحالة']], ds.map(d => { const x = docState(d); return `<tr>${td(esc(d.type))}${td(dt(d.exp))}${td(pillSt(x.s))}</tr>`; }))}</div>
+      <div class="panel"><h3>تاريخ الراتب والجزاءات</h3>${table([['التاريخ'], ['البيان'], ['المبلغ', 1]], [...hs.map(h => `<tr>${td(dt(h.eff))}${td('راتب: ' + esc(h.note || ''))}${tn(money((+h.basic || 0) + (+h.house || 0) + (+h.trans || 0) + (+h.other || 0)))}</tr>`),
+        ...ps.map(p => `<tr>${td(dt(p.date))}${td(esc(p.type) + (p.reason ? ' – ' + esc(p.reason) : ''))}${tn(p.amount ? money(p.amount) : '—')}</tr>`)])}</div></div>`; })()}
+    <div class="panel"><h3>رواتب سنة ${st.y}</h3>${table([['الشهر'], ['الاستحقاقات', 1], ['منها إضافي ومكافآت', 1], ['خصومات', 1], ['خصم السلف', 1], ['الصافي', 1]],
+      ms.map((r, i) => months[i].length ? `<tr>${td(MONTHS[i])}${tn(money(r.gross))}${tn(money(r.extra))}${tn(money(r.ded))}${tn(money(r.adv))}${tn('<b>' + money(r.net) + '</b>')}</tr>` : '').filter(Boolean),
+      `<tr><td>الإجمالي</td>${tn(money(all.gross))}${tn(money(all.extra))}${tn(money(all.ded))}${tn(money(all.adv))}${tn(money(all.net))}</tr>`)}</div>`;
+  },
+  payslip() {
+    const e = empById[st.emp]; if (!e) return '<p class="empty">لا يوجد موظفون</p>';
+    const r = D.pay.filter(p => p.id === e.id && p.y === st.y && p.m === st.m), s = k => sum(r, p => p[k]), b = BAL[e.id];
+    const line = (l, k) => `<tr>${td(l)}${tn(money(s(k)))}</tr>`;
+    return `<div class="controls">${sel('emp', 'الموظف', empOpts(st.emp))}${sel('y', 'السنة', yearOpts(st.y))}${sel('m', 'الشهر', monthOpts(st.m))}</div>
+    <div class="panel slip"><div class="row between"><h2>قسيمة راتب ${MONTHS[st.m - 1]} ${st.y}</h2>${r.length ? '<button class="btn ghost" data-act="printslip">تنزيل للطباعة</button>' : ''}</div>
+      <div class="kv">${kv('الموظف', esc(e.name))}${kv('رقم الموظف', e.id)}${kv('الوظيفة', esc(e.job))}${kv('القسم', esc(e.dept))}</div>
+      ${r.length ? `<div class="grid2">
+        <div><h3>الاستحقاقات</h3>${table([['البند'], ['المبلغ', 1]], [line('الراتب الأساسي', 'basic'), line('بدل سكن', 'house'), line('بدل مواصلات', 'trans'), line('بدلات أخرى', 'other'), line('عمل إضافي', 'ot'), line('مكافآت وحوافز', 'bonus')], `<tr><td>الإجمالي</td>${tn(money(s('gross')))}</tr>`)}</div>
+        <div><h3>الخصومات</h3>${table([['البند'], ['المبلغ', 1]], [line('غياب / بدون راتب', 'absded'), line('قسط سلفة', 'advded'), line('خصومات أخرى وجزاءات', 'otherded'), line('عمولة البنك', 'bank')], `<tr><td>الإجمالي</td>${tn(money(s('totded')))}</tr>`)}</div>
+      </div>
+      <div class="net"><span>صافي الراتب المستحق</span><b>${money(s('net'))} ${esc(CUR)}</b></div>` : '<p class="empty">لا يوجد راتب مسجل لهذا الموظف في هذا الشهر</p>'}
+      <div class="kv">${kv('رصيد الإجازات', num(b.lbal) + ' يوم')}${kv('رصيد السلف المتبقي', money(b.advBal))}</div>
+    </div>`;
+  }
+};
+/* =====================================================================
+   Full system: roles, editing, approvals, audit log, backups, summary copy
+   ===================================================================== */
+const io = {loaded: false, mode: 'loading', msg: 'جاري تحميل البيانات…', note: '', busy: false, imp: null, db: null, dl: null, art: null, user: null, payYears: [], backups: null};
+const me = {id: null, isOwner: false, canEdit: false};
+const r3 = v => Math.round((Number(v) || 0) * 1000) / 1000;
+const rid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const PAYK = ['m', 'id', 'basic', 'house', 'trans', 'other', 'ot', 'bonus', 'gross', 'absded', 'advded', 'otherded', 'totded', 'net', 'othrs', 'absd', 'note', 'bank', 'method'];
+const ROWDOCS = ['emps', 'adv', 'lv', 'plan', 'docs', 'hist', 'pen'];
+const ROLES_LIST = ['مدير', 'موارد بشرية', 'محاسب', 'مشاهد'];
+const DOC_TYPES = ['البطاقة المدنية', 'جواز السفر', 'الإقامة', 'ترخيص مزاولة المهنة', 'عقد العمل', 'الشهادة الصحية', 'أخرى'];
+const PEN_TYPES = ['لفت نظر', 'إنذار شفهي', 'إنذار كتابي', 'خصم من الراتب', 'إيقاف عن العمل'];
+const PAY_METHODS = ['تحويل راتب', 'شيك', 'نقدي', 'أخرى'];
+const REASONS = ['إنهاء من صاحب العمل', 'استقالة', 'انتهاء العقد'];
+let CLOSE = {}, REQ = [], AUD = [], ROLES = {}, USERS = {}, NAMES = {};
+const COLNAME = {emps: 'الموظفين', lv: 'الإجازات', plan: 'خطة الإجازات', adv: 'السلف', docs: 'المستندات', hist: 'سجل الرواتب', pen: 'الجزاءات', pay: 'كشف الرواتب',
+  settings: 'الإعدادات', close: 'اعتماد الرواتب', req: 'طلبات الإجازة', roles: 'الصلاحيات', import: 'رفع Excel', backup: 'النسخ الاحتياطية'};
+
+/* ---------- roles and permissions (the page enforces steps; the store enforces who may write at all) ---------- */
+const roleOf = uid => (uid && uid === me.id && me.isOwner) ? 'مدير' : (ROLES[uid] && ROLES[uid].role) || (uid === me.id && me.canEdit ? 'محرر' : 'مشاهد');
+const myRole = () => roleOf(me.id);
+const RIGHTS = {
+  emps: ['مدير', 'موارد بشرية', 'محرر'], docs: ['مدير', 'موارد بشرية', 'محرر'], lv: ['مدير', 'موارد بشرية', 'محرر'], plan: ['مدير', 'موارد بشرية', 'محرر'],
+  pen: ['مدير', 'موارد بشرية', 'محرر'], hist: ['مدير', 'موارد بشرية', 'محاسب', 'محرر'], pay: ['مدير', 'محاسب', 'محرر'], adv: ['مدير', 'محاسب', 'محرر'],
+  'close-submit': ['مدير', 'محاسب', 'محرر'], 'close-pay': ['مدير', 'محاسب'], 'close-approve': ['مدير'], 'close-reopen': ['مدير'],
+  'req-manager': ['مدير'], 'req-hr': ['مدير', 'موارد بشرية'], settings: ['مدير'], roles: ['مدير'], import: ['مدير', 'محرر'], restore: ['مدير'], audit: ['مدير', 'موارد بشرية', 'محاسب', 'محرر'],
+  summary: ['مدير', 'محرر']
+};
+const may = a => io.mode === 'full' && me.canEdit && (RIGHTS[a] || []).includes(myRole());
+const mayReq = () => io.mode === 'full' && !!me.id;
+
+/* ---------- payroll helpers ---------- */
+const ymKey = (y, m) => `${y}-${String(m).padStart(2, '0')}`;
+const LOCKED = ['معتمد', 'تم الدفع'];
+const isLocked = (y, m) => !!(CLOSE[ymKey(y, m)] && LOCKED.includes(CLOSE[ymKey(y, m)].status));
+function calcPay(p) {
+  const fixed = (+p.basic || 0) + (+p.house || 0) + (+p.trans || 0) + (+p.other || 0);
+  p.ot = r3((+p.othrs || 0) * (+p.basic || 0) / (S.wd || 26) / (S.hrs || 8) * (S.mult || 1));
+  p.gross = r3(fixed + p.ot + (+p.bonus || 0));
+  p.absded = r3((+p.absd || 0) * fixed / (S.wd || 26));
+  p.totded = r3(p.absded + (+p.advded || 0) + (+p.otherded || 0) + (+p.bank || 0));
+  p.net = r3(p.gross - p.totded);
+  return p;
+}
+function salaryAt(id, y, m) {
+  const end = ymd(y, m, dim(y, m));
+  const h = D.hist.filter(r => r.id === id && r.eff && r.eff <= end).sort((a, b) => a.eff.localeCompare(b.eff)).pop();
+  const e = empById[id] || {};
+  return h ? {basic: +h.basic || 0, house: +h.house || 0, trans: +h.trans || 0, other: +h.other || 0} : {basic: e.basic || 0, house: e.house || 0, trans: e.trans || 0, other: e.other || 0};
+}
+const penFor = (id, y, m) => D.pen.filter(p => p.id === id && (+p.y || (p.date ? +p.date.slice(0, 4) : 0)) === y && (+p.m || (p.date ? +p.date.slice(5, 7) : 0)) === m);
+const unpaidDays = (id, y, m) => sum(D.lv.filter(l => l.id === id && l.type === 'بدون راتب'), l => ovl(l.from, l.to, ymd(y, m, 1), ymd(y, m, dim(y, m))));
+
+/* ---------- documents ---------- */
+const docState = d => { if (!d.exp) return {s: 'غير مسجل', left: null}; const left = Math.round((day(d.exp) - day(today)) / 864e5);
+  return {s: left < 0 ? 'منتهي' : left <= (S.alert || 60) ? 'ينتهي قريباً' : 'ساري', left}; };
+
+/* ---------- forms ---------- */
+const F_ = (k, l, t, o = {}) => ({k, l, t, ...o});
+const FORMS = {
+  emps: {title: 'موظف', fields: () => [F_('id', 'رقم الموظف', 'num', {req: 1, lock: 1}), F_('name', 'الاسم', 'text', {req: 1}), F_('job', 'الوظيفة', 'list', {opts: S.jobs || []}),
+    F_('dept', 'القسم', 'list', {opts: S.depts}), F_('nat', 'الجنسية', 'text'), F_('civil', 'الرقم المدني', 'text'), F_('phone', 'الهاتف', 'text'), F_('hire', 'تاريخ التعيين', 'date'),
+    F_('status', 'الحالة', 'sel', {opts: [ACTIVE, 'منتهي الخدمة']}), F_('end', 'تاريخ نهاية الخدمة', 'date'), F_('basic', 'الراتب الأساسي', 'num'), F_('house', 'بدل سكن', 'num'),
+    F_('trans', 'بدل مواصلات', 'num'), F_('other', 'بدلات أخرى', 'num'), F_('bank', 'البنك', 'text'), F_('iban', 'رقم الحساب / IBAN', 'text'), F_('open', 'رصيد إجازات افتتاحي (يوم)', 'num'), F_('note', 'ملاحظات', 'area')]},
+  lv: {title: 'إجازة تمت', fields: () => [F_('id', 'الموظف', 'emp', {req: 1}), F_('type', 'نوع الإجازة', 'sel', {opts: S.ltypes}), F_('from', 'من تاريخ', 'date'), F_('to', 'إلى تاريخ', 'date'),
+    F_('days', 'عدد الأيام (فارغ = من التواريخ)', 'num'), F_('note', 'ملاحظات', 'area')]},
+  plan: {title: 'إجازة مخططة', fields: () => [F_('id', 'الموظف', 'emp', {req: 1}), F_('type', 'نوع الإجازة', 'sel', {opts: S.ltypes}), F_('from', 'من تاريخ', 'date', {req: 1}), F_('to', 'إلى تاريخ', 'date', {req: 1}),
+    F_('days', 'عدد الأيام (فارغ = من التواريخ)', 'num'), F_('status', 'الحالة', 'sel', {opts: PSTATS}), F_('note', 'ملاحظات', 'area')]},
+  req: {title: 'طلب إجازة', fields: () => [F_('id', 'الموظف', 'emp', {req: 1}), F_('type', 'نوع الإجازة', 'sel', {opts: S.ltypes}), F_('from', 'من تاريخ', 'date', {req: 1}), F_('to', 'إلى تاريخ', 'date', {req: 1}),
+    F_('days', 'عدد الأيام (فارغ = من التواريخ)', 'num'), F_('note', 'سبب الطلب / ملاحظات', 'area')]},
+  adv: {title: 'سلفة', fields: () => [F_('date', 'تاريخ السلفة', 'date', {req: 1}), F_('id', 'الموظف', 'emp', {req: 1}), F_('amount', 'مبلغ السلفة', 'num', {req: 1}), F_('n', 'عدد الأقساط', 'num'), F_('note', 'ملاحظات', 'area')]},
+  docs: {title: 'مستند', fields: () => [F_('id', 'الموظف', 'emp', {req: 1}), F_('type', 'نوع المستند', 'sel', {opts: DOC_TYPES}), F_('num', 'رقم المستند', 'text'), F_('issue', 'تاريخ الإصدار', 'date'),
+    F_('exp', 'تاريخ الانتهاء', 'date'), F_('note', 'ملاحظات', 'area')]},
+  hist: {title: 'تغيير راتب', fields: () => [F_('id', 'الموظف', 'emp', {req: 1}), F_('eff', 'تاريخ السريان', 'date', {req: 1}), F_('basic', 'الأساسي', 'num'), F_('house', 'بدل سكن', 'num'),
+    F_('trans', 'بدل مواصلات', 'num'), F_('other', 'بدلات أخرى', 'num'), F_('note', 'سبب التغيير / ملاحظات', 'area')]},
+  pen: {title: 'جزاء أو إنذار', fields: () => [F_('date', 'التاريخ', 'date', {req: 1}), F_('id', 'الموظف', 'emp', {req: 1}), F_('type', 'النوع', 'sel', {opts: PEN_TYPES}), F_('reason', 'السبب', 'area'),
+    F_('amount', 'مبلغ الخصم', 'num'), F_('y', 'سنة الخصم (فارغ = سنة التاريخ)', 'num'), F_('m', 'شهر الخصم (فارغ = شهر التاريخ)', 'num'), F_('note', 'ملاحظات', 'area')]},
+  pay: {title: 'صف راتب', fields: () => [F_('y', 'السنة', 'num', {req: 1, lock: 1}), F_('m', 'الشهر', 'num', {req: 1, lock: 1}), F_('id', 'الموظف', 'emp', {req: 1, lock: 1}), F_('basic', 'الأساسي', 'num'),
+    F_('house', 'بدل سكن', 'num'), F_('trans', 'بدل مواصلات', 'num'), F_('other', 'بدلات أخرى', 'num'), F_('othrs', 'ساعات إضافي', 'num'), F_('bonus', 'مكافآت / حوافز', 'num'),
+    F_('absd', 'أيام غياب / بدون راتب', 'num'), F_('advded', 'خصم قسط سلفة', 'num'), F_('otherded', 'خصومات أخرى وجزاءات', 'num'), F_('bank', 'عمولة البنك', 'num'),
+    F_('method', 'طريقة الدفع', 'sel', {opts: PAY_METHODS}), F_('note', 'ملاحظات', 'area')]},
+  settings: {title: 'الإعدادات', fields: () => [F_('clinic', 'اسم العيادة', 'text', {req: 1}), F_('currency', 'العملة', 'text'), F_('wd', 'أيام العمل في الشهر (أجر اليوم)', 'num'),
+    F_('hrs', 'ساعات العمل اليومية', 'num'), F_('mult', 'معامل أجر الساعة الإضافية', 'num'), F_('ldays', 'أيام الإجازة السنوية', 'num'), F_('d1', 'نهاية الخدمة: أيام عن كل سنة (أول 5)', 'num'),
+    F_('d2', 'نهاية الخدمة: أيام عن كل سنة (بعد 5)', 'num'), F_('cap', 'الحد الأقصى (عدد الرواتب)', 'num'), F_('base', 'أساس نهاية الخدمة', 'sel', {opts: ['الأساسي', 'الإجمالي']}),
+    F_('res0', 'نسبة الاستقالة أقل من 3 سنوات', 'num'), F_('res1', 'من 3 إلى أقل من 5', 'num'), F_('res2', 'من 5 إلى أقل من 10', 'num'), F_('res3', '10 سنوات فأكثر', 'num'),
+    F_('lstart', 'بداية احتساب الإجازات', 'date'), F_('alert', 'التنبيه قبل انتهاء المستند (يوم)', 'num'), F_('depts', 'الأقسام (افصل بفاصلة)', 'area'), F_('jobs', 'الوظائف (افصل بفاصلة)', 'area'),
+    F_('ltypes', 'أنواع الإجازات (الأول هو السنوية)', 'area')]},
+  newuser: {title: 'مستخدم جديد', fields: () => [
+    F_('name', 'الاسم الكامل', 'text', {req: 1}),
+    F_('email', 'البريد الإلكتروني', 'text', {req: 1}),
+    F_('password', 'كلمة المرور (6 أحرف على الأقل)', 'text', {req: 1}),
+    F_('role', 'الصلاحية / الدور', 'sel', {opts: ROLES_LIST, req: 1})
+  ]}
+};
+const MODAL = {open: false, col: null, key: null, vals: {}, err: '', busy: false};
+function openForm(col, key, preset) {
+  let vals = {};
+  if (col === 'settings') vals = {...S, res0: S.res[0], res1: S.res[1], res2: S.res[2], res3: S.res[3], depts: (S.depts || []).join('، '), jobs: (S.jobs || []).join('، '), ltypes: (S.ltypes || []).join('، ')};
+  else if (key != null) vals = {...(findRec(col, key) || {})};
+  else vals = {...(preset || {})};
+  if (col === 'plan' && !vals.status) vals.status = 'مخطط';
+  if (['lv', 'plan', 'req'].includes(col) && !vals.type) vals.type = S.ltypes[0];
+  if (col === 'emps' && !vals.status) vals.status = ACTIVE;
+  if (col === 'pay' && !vals.method && key == null) vals.method = 'تحويل راتب';
+  if (col === 'newuser' && !vals.role) vals.role = 'مشاهد';
+  Object.assign(MODAL, {open: true, col, key, vals, err: '', busy: false});
+  renderModal();
+  setTimeout(() => { const f = document.querySelector('#modal input:not([disabled]),#modal select:not([disabled])'); if (f) f.focus(); }, 30);
+}
+function findRec(col, key) {
+  if (col === 'emps') return D.emps.find(e => String(e.id) === String(key));
+  if (col === 'pay') { const [y, m, id] = String(key).split('|').map(Number); return D.pay.find(p => p.y === y && p.m === m && p.id === id); }
+  if (col === 'req') return REQ.find(r => r.k === key);
+  return (D[col] || []).find(r => r.k === key);
+}
+function fieldHtml(f, v, isEdit) {
+  const id = 'f_' + f.k, dis = isEdit && f.lock ? ' disabled' : '', val = v == null ? '' : v;
+  let input;
+  if (f.t === 'sel') input = `<select id="${id}" name="${f.k}"${dis}>${f.opts.map(o => opt(o, o, val)).join('')}</select>`;
+  else if (f.t === 'emp') input = `<select id="${id}" name="${f.k}"${dis}><option value="">اختر الموظف</option>${D.emps.slice().sort((a, b) => (a.status === ACTIVE ? 0 : 1) - (b.status === ACTIVE ? 0 : 1)).map(e => opt(e.id, e.name + (e.status === ACTIVE ? '' : ' (منتهي)'), val)).join('')}</select>`;
+  else if (f.t === 'area') input = `<textarea id="${id}" name="${f.k}" rows="2"${dis}>${esc(val)}</textarea>`;
+  else if (f.t === 'list') input = `<input id="${id}" name="${f.k}" list="dl_${f.k}" value="${esc(val)}"${dis}><datalist id="dl_${f.k}">${(f.opts || []).map(o => `<option value="${esc(o)}">`).join('')}</datalist>`;
+  else input = `<input id="${id}" name="${f.k}" type="${f.t === 'num' ? 'number' : f.t === 'date' ? 'date' : 'text'}"${f.t === 'num' ? ' step="any"' : ''} value="${esc(val)}"${dis}>`;
+  return `<label for="${id}" class="fld${f.t === 'area' ? ' wide' : ''}"><span>${f.l}${f.req ? ' *' : ''}</span>${input}</label>`;
+}
+function modalHtml() {
+  const def = FORMS[MODAL.col], isEdit = MODAL.key != null;
+  const title = MODAL.col === 'settings' ? 'تعديل الإعدادات' : (isEdit ? 'تعديل ' : 'إضافة ') + def.title;
+  return `<div class="ov" data-act="mclose"></div><form class="dlg" id="mform" role="dialog" aria-modal="true" aria-labelledby="mtitle">
+    <h2 id="mtitle">${title}</h2>
+    <div class="flds">${def.fields().map(f => fieldHtml(f, MODAL.vals[f.k], isEdit)).join('')}</div>
+    ${MODAL.err ? `<p class="msg warn">${esc(MODAL.err)}</p>` : ''}
+    <div class="row"><button class="btn" type="submit"${MODAL.busy ? ' disabled' : ''}>${MODAL.busy ? 'جاري الحفظ…' : 'حفظ'}</button><button class="btn ghost" type="button" data-act="mclose">إلغاء</button></div>
+  </form>`;
+}
+function readForm() {
+  const def = FORMS[MODAL.col], fd = new FormData(document.getElementById('mform')), o = {...MODAL.vals};
+  for (const f of def.fields()) {
+    if (!fd.has(f.k)) continue;
+    let v = fd.get(f.k); v = typeof v === 'string' ? v.trim() : v;
+    if (f.t === 'num' || f.t === 'emp') o[f.k] = v === '' ? (f.t === 'emp' ? null : null) : Number(v);
+    else o[f.k] = v === '' ? (f.t === 'date' ? null : '') : v;
+  }
+  return o;
+}
+function validate(col, v, isEdit) {
+  const def = FORMS[col];
+  for (const f of def.fields()) if (f.req && (v[f.k] == null || v[f.k] === '' || (typeof v[f.k] === 'number' && isNaN(v[f.k])))) return `اكتب «${f.l.replace(' *', '')}».`;
+  if (col === 'emps' && !isEdit && D.emps.some(e => e.id === v.id)) return 'رقم الموظف موجود بالفعل. اختر رقماً آخر.';
+  if (['lv', 'plan', 'req'].includes(col) && v.from && v.to && v.to < v.from) return 'تاريخ النهاية قبل تاريخ البداية.';
+  if (col === 'pay') {
+    if (!(v.m >= 1 && v.m <= 12)) return 'الشهر يجب أن يكون من 1 إلى 12.';
+    if (isLocked(v.y, v.m)) return 'هذا الشهر معتمد ومقفول. يعيد المدير فتحه من «الاعتمادات» قبل التعديل.';
+    if (!isEdit && D.pay.some(p => p.y === v.y && p.m === v.m && p.id === v.id)) return 'يوجد صف لهذا الموظف في نفس الشهر.';
+  }
+  if (col === 'newuser') {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email || '')) return 'اكتب بريداً إلكترونياً صحيحاً.';
+    if ((v.password || '').length < 6) return 'كلمة المرور يجب أن تكون 6 أحرف على الأقل.';
+  }
+  return '';
+}
+function normalize(col, v) {
+  for (const k of ['basic', 'house', 'trans', 'other', 'open', 'amount', 'n', 'othrs', 'bonus', 'absd', 'advded', 'otherded', 'bank']) if (k in v) v[k] = Number(v[k]) || 0;
+  if (['lv', 'plan', 'req'].includes(col) && (v.days == null || isNaN(v.days)) && v.from && v.to) v.days = (day(v.to) - day(v.from)) / 864e5 + 1;
+  if (['lv', 'plan', 'req'].includes(col)) v.days = Number(v.days) || 0;
+  if (col === 'settings') {
+    const split = s => String(s || '').split(/[،,\n]/).map(x => x.trim()).filter(Boolean);
+    v.depts = split(v.depts); v.jobs = split(v.jobs); v.ltypes = split(v.ltypes); if (!v.ltypes.length) v.ltypes = ['سنوية'];
+    v.res = [v.res0, v.res1, v.res2, v.res3].map(x => Number(x) || 0); delete v.res0; delete v.res1; delete v.res2; delete v.res3;
+  }
+  if (col === 'pay') calcPay(v);
+  return v;
+}
+
+/* ---------- store writes (read fresh, change, write, log) ---------- */
+const labelOf = (col, r) => !r ? '' : col === 'emps' ? `${r.name} (${r.id})` : col === 'pay' ? `${nameOf(r.id)} – ${MONTHS[r.m - 1]} ${r.y}` : col === 'settings' ? 'الإعدادات'
+  : `${nameOf(r.id)}${r.from ? ' – ' + dt(r.from) : r.date ? ' – ' + dt(r.date) : r.eff ? ' – ' + dt(r.eff) : r.type ? ' – ' + r.type : ''}`;
+function diff(col, a, b) {
+  const def = FORMS[col]; if (!def) return [];
+  const out = [];
+  for (const f of def.fields()) {
+    const k = f.k, o = a ? a[k] : undefined, n = b ? b[k] : undefined;
+    const s = x => x == null ? '' : Array.isArray(x) ? x.join('، ') : f.t === 'emp' ? nameOf(x) : String(x);
+    if (s(o) !== s(n)) out.push({f: f.l.replace(/ \(.*\)$/, ''), o: s(o), n: s(n)});
+  }
+  if (col === 'settings') for (const k of ['res', 'depts', 'jobs', 'ltypes']) if (JSON.stringify(a && a[k]) !== JSON.stringify(b && b[k])) out.push({f: k, o: JSON.stringify(a && a[k]), n: JSON.stringify(b && b[k])});
+  return out.slice(0, 40);
+}
+async function logAudit(act, col, label, changes) {
+  if (!io.db) return;
+  try { await io.db.collection('audit').add({at: new Date().toISOString(), by: me.id || '', act, col: COLNAME[col] || col, key: label || '', ch: changes || []}); } catch (e) { /* audit is best effort */ }
+}
+async function touch() { try { await io.db.doc('hr/meta').set({asof: today, rev: Date.now()}); } catch (e) {} }
+async function mutRows(name, fn) {
+  const ref = io.db.doc('hr/' + name), snap = await ref.get();
+  const rows = snap.exists && Array.isArray(snap.data().rows) ? snap.data().rows.map(x => ({...x})) : [];
+  const res = fn(rows);
+  await ref.set({rows});
+  return res;
+}
+async function mutPay(y, fn) {
+  const ref = io.db.doc('pay/' + y), snap = await ref.get();
+  const rows = (snap.exists && Array.isArray(snap.data().rows) ? snap.data().rows : []).map(a => { const p = {y}; PAYK.forEach((k, i) => p[k] = a[i]); return p; });
+  const res = fn(rows);
+  if (rows.length) await ref.set({rows: rows.map(p => PAYK.map(k => p[k] ?? 0))}); else await ref.delete();
+  return res;
+}
+async function saveRecord(col, key, v) {
+  const isEdit = key != null;
+  if (col === 'settings') {
+    const before = {...S}; await io.db.doc('hr/settings').set(v); await logAudit('تعديل', col, 'الإعدادات', diff(col, before, v)); return;
+  }
+  if (col === 'req') {
+    await io.db.collection('requests').add({...v, k: undefined, status: 'بانتظار المدير', at: new Date().toISOString(), by: me.id || '', steps: [{a: 'تقديم الطلب', by: me.id || '', at: new Date().toISOString()}]});
+    return;
+  }
+  if (col === 'pay') {
+    const r = await mutPay(v.y, rows => {
+      const i = rows.findIndex(p => p.m === v.m && p.id === v.id); const before = i >= 0 ? {...rows[i]} : null;
+      const row = {...v}; delete row.name; delete row.dept;
+      if (i >= 0) rows[i] = row; else rows.push(row);
+      return before;
+    });
+    await logAudit(isEdit ? 'تعديل' : 'إضافة', col, labelOf(col, v), diff(col, r, v)); await touch(); return;
+  }
+  const before = await mutRows(col, rows => {
+    const i = col === 'emps' ? rows.findIndex(e => String(e.id) === String(isEdit ? key : v.id)) : rows.findIndex(r => r.k === key);
+    const b = i >= 0 ? {...rows[i]} : null;
+    const row = {...v}; if (col !== 'emps') row.k = row.k || rid();
+    if (i >= 0 && isEdit) rows[i] = row; else rows.push(row);
+    return b;
+  });
+  await logAudit(isEdit ? 'تعديل' : 'إضافة', col, labelOf(col, v), diff(col, before, v)); await touch();
+}
+async function deleteRecord(col, key) {
+  const rec = findRec(col, key); if (!rec) return;
+  if (col === 'pay') {
+    if (isLocked(rec.y, rec.m)) { io.note = 'هذا الشهر معتمد ومقفول.'; return render(); }
+    await mutPay(rec.y, rows => { const i = rows.findIndex(p => p.m === rec.m && p.id === rec.id); if (i >= 0) rows.splice(i, 1); });
+  } else if (col === 'emps') {
+    await mutRows('emps', rows => { const i = rows.findIndex(e => String(e.id) === String(key)); if (i >= 0) rows.splice(i, 1); });
+  } else await mutRows(col, rows => { const i = rows.findIndex(r => r.k === key); if (i >= 0) rows.splice(i, 1); });
+  await logAudit('حذف', col, labelOf(col, rec), diff(col, rec, null)); await touch();
+}
+const CONFIRM = {key: null};
+function renderModal() {
+  document.getElementById('modal').innerHTML = MODAL.open ? modalHtml() : '';
+}
+function authErrAr(e) {
+  const c = (e && e.code) || '';
+  if (c === 'auth/email-already-in-use') return 'هذا البريد الإلكتروني مسجل بالفعل.';
+  if (c === 'auth/invalid-email') return 'صيغة البريد الإلكتروني غير صحيحة.';
+  if (c === 'auth/weak-password') return 'كلمة المرور ضعيفة (يجب أن تكون 6 أحرف على الأقل).';
+  if (c === 'auth/invalid-credential' || c === 'auth/wrong-password' || c === 'auth/user-not-found') return 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
+  if (c === 'auth/user-disabled') return 'تم تعطيل هذا الحساب.';
+  if (c === 'auth/too-many-requests') return 'محاولات كثيرة متكررة. انتظر قليلاً ثم حاول مرة أخرى.';
+  if (c === 'auth/network-request-failed') return 'تحقق من الاتصال بالإنترنت.';
+  if (c === 'auth/operation-not-allowed') return 'يجب تفعيل تسجيل الدخول بالبريد وكلمة المرور (Email/Password) من لوحة تحكم Firebase.';
+  return (e && e.message) || 'حدث خطأ غير متوقع.';
+}
+async function createNewUser(v) {
+  const secName = 'userCreator_' + Date.now();
+  const secApp = firebase.initializeApp(FIREBASE_CONFIG, secName);
+  try {
+    const cred = await secApp.auth().createUserWithEmailAndPassword(v.email, v.password);
+    const uid = cred.user.uid;
+    if (v.name) await cred.user.updateProfile({ displayName: v.name }).catch(() => {});
+    await secApp.auth().signOut();
+    await io.db.doc('users/' + uid).set({ name: v.name, email: v.email, seen: '', createdAt: new Date().toISOString() });
+    await io.db.doc('roles/' + uid).set({ role: v.role || 'مشاهد' });
+    await logAudit('إضافة مستخدم', 'roles', `${v.name} (${v.email})`, [{f: 'البريد', o: '', n: v.email}, {f: 'الدور', o: '', n: v.role || 'مشاهد'}]);
+  } finally {
+    await secApp.delete().catch(() => {});
+  }
+}
+async function submitForm() {
+  const col = MODAL.col, isEdit = MODAL.key != null;
+  const v = normalize(col, readForm());
+  const err = validate(col, v, isEdit); if (err) { MODAL.err = err; MODAL.vals = v; return renderModal(); }
+  MODAL.busy = true; renderModal();
+  try {
+    if (col === 'newuser') {
+      await createNewUser(v);
+      MODAL.open = false;
+      io.note = `تم إنشاء حساب ${v.name} بنجاح. يمكنه الآن تسجيل الدخول فوراً بالبريد وكلمة المرور.`;
+    } else {
+      await saveRecord(col, MODAL.key, v);
+      MODAL.open = false;
+      io.note = col === 'req' ? 'تم إرسال الطلب للمدير.' : 'تم الحفظ.';
+    }
+  } catch (e) {
+    MODAL.busy = false; MODAL.vals = v;
+    MODAL.err = col === 'newuser' ? authErrAr(e) : writeErr(e);
+    return renderModal();
+  }
+  renderModal();
+  render();
+}
+const writeErr = e => (e && (e.code === 'permission-denied' || e.code === 'invalid_argument')) ? 'لم يتم الحفظ: حسابك لا يملك صلاحية التعديل على هذه البيانات.' : (e && (e.code === 'resource-exhausted' || e.code === 'quota_exceeded')) ? 'لم يتم الحفظ: مساحة التخزين ممتلئة.' : 'تعذر الحفظ. تحقق من الاتصال وحاول مرة أخرى.';
+
+/* ---------- small UI helpers ---------- */
+const addBtn = (col, label) => may(col) ? `<button class="btn" data-act="add:${col}">+ ${label}</button>` : '';
+const rowActs = (col, key, opts = {}) => {
+  if (!may(col) || opts.locked) return opts.locked ? '<td class="acts"><span class="lock" title="الشهر معتمد">مقفول</span></td>' : '';
+  const ck = `${col}:${key}`;
+  return `<td class="acts"><button class="mini" data-act="edit:${col}:${key}" aria-label="تعديل">تعديل</button>${CONFIRM.key === ck
+    ? `<button class="mini danger" data-act="del:${col}:${key}">تأكيد الحذف</button><button class="mini" data-act="nodel">لا</button>` : `<button class="mini" data-act="ask:${col}:${key}" aria-label="حذف">حذف</button>`}</td>`;
+};
+const actHead = col => may(col) ? [['']] : [];
+const pillSt = s => `<span class="pill st-${esc(String(s).replace(/\s/g, '_'))}">${esc(s)}</span>`;
+const who = uid => esc(NAMES[uid] || (uid === me.id ? 'أنت' : 'مستخدم'));
+async function resolveNames(ids) {
+  if (!io.user || !ids.length) return;
+  const miss = [...new Set(ids.filter(Boolean))].filter(i => !(i in NAMES));
+  if (!miss.length) return;
+  try { const ps = await io.user.profiles(miss); let ch = false; for (const i of miss) { NAMES[i] = (ps[i] && ps[i].name) || ''; ch = true; } if (ch) render(); } catch (e) {}
+}
+
+/* ---------- printing: a standalone page downloaded and printed by the browser ---------- */
+async function printDoc(title, inner) {
+  if (!io.dl) { io.note = 'التنزيل غير متاح في هذا العرض.'; return render(); }
+  const html = `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>${esc(title)}</title><style>
+  body{font-family:Tahoma,Arial,sans-serif;color:#111;margin:24px;font-size:13px}h1{font-size:18px;margin:0 0 4px}h2{font-size:14px;margin:18px 0 6px;color:#0f4c5c}
+  .hd{display:flex;justify-content:space-between;border-bottom:2px solid #0f4c5c;padding-bottom:8px;margin-bottom:12px}table{border-collapse:collapse;width:100%;margin:6px 0}
+  td,th{border:1px solid #bbb;padding:5px 8px;text-align:right}th{background:#e3f1f3}.n{text-align:left;direction:ltr}.tot td{font-weight:bold;background:#f2f5f6}
+  .sig{display:flex;gap:24px;margin-top:40px}.sig div{flex:1;border-top:1px solid #333;padding-top:6px;text-align:center}.muted{color:#666;font-size:11px}
+  @media print{body{margin:10mm}button{display:none}}</style></head><body>
+  <div class="hd"><div><h1>${esc(S.clinic || 'العيادة')}</h1><div class="muted">${esc(title)}</div></div><div class="muted">تاريخ الطباعة: ${dt(today)}</div></div>
+  ${inner}<p class="muted">مستخرج من نظام شؤون الموظفين. <button onclick="print()">طباعة</button></p><script>setTimeout(function(){try{print()}catch(e){}},400)<\/script></body></html>`;
+  try { await io.dl.save({filename: title.replace(/[\\/:*?"<>|]/g, '-') + '.html', data: html}); io.note = 'تم تجهيز الملف: افتحه واطبعه أو احفظه PDF.'; }
+  catch (e) { io.note = e && e.code === 'declined' ? 'تم إلغاء التنزيل.' : 'تعذر تجهيز ملف الطباعة.'; }
+  render();
+}
+const pt = (rows, head) => `<table>${head ? `<tr>${head.map(h => `<th>${h}</th>`).join('')}</tr>` : ''}${rows.join('')}</table>`;
+const pr = (cells, cls) => `<tr${cls ? ` class="${cls}"` : ''}>${cells.map(c => `<td${typeof c === 'number' ? ' class="n"' : ''}>${typeof c === 'number' ? money(c) : c}</td>`).join('')}</tr>`;
+function printSlip(e, y, m) {
+  const r = D.pay.filter(p => p.id === e.id && p.y === y && p.m === m); const s = k => sum(r, p => p[k]);
+  printDoc(`قسيمة راتب ${e.name} ${MONTHS[m - 1]} ${y}`, `${pt([pr(['الموظف', esc(e.name), 'رقم الموظف', e.id]), pr(['الوظيفة', esc(e.job), 'القسم', esc(e.dept)])])}
+    <h2>الاستحقاقات</h2>${pt([pr(['الراتب الأساسي', s('basic')]), pr(['بدل سكن', s('house')]), pr(['بدل مواصلات', s('trans')]), pr(['بدلات أخرى', s('other')]), pr(['عمل إضافي', s('ot')]), pr(['مكافآت', s('bonus')]), pr(['الإجمالي', s('gross')], 'tot')])}
+    <h2>الخصومات</h2>${pt([pr(['غياب / بدون راتب', s('absded')]), pr(['قسط سلفة', s('advded')]), pr(['خصومات أخرى وجزاءات', s('otherded')]), pr(['عمولة البنك', s('bank')]), pr(['الإجمالي', s('totded')], 'tot')])}
+    ${pt([pr(['صافي الراتب المستحق', s('net')], 'tot')])}<div class="sig"><div>توقيع الموظف</div><div>المحاسب</div><div>الإدارة</div></div>`);
+}
+function printLeave(r, kind) {
+  const e = empById[r.id] || {name: nameOf(r.id)}; const b = BAL[r.id] || {lbal: 0};
+  const after = r.type === S.ltypes[0] ? b.lbal - (kind === 'lv' ? 0 : r.days) : b.lbal;
+  printDoc(`نموذج إجازة ${e.name} ${r.from ? dt(r.from) : ''}`, `${pt([pr(['الموظف', esc(e.name), 'رقم الموظف', r.id]), pr(['الوظيفة', esc(e.job || ''), 'القسم', esc(e.dept || '')])])}
+    <h2>بيانات الإجازة</h2>${pt([pr(['نوع الإجازة', esc(r.type)]), pr(['من تاريخ', dt(r.from)]), pr(['إلى تاريخ', dt(r.to)]), pr(['عدد الأيام', num(r.days)]),
+      pr(['رصيد الإجازات السنوية الحالي', num(b.lbal) + ' يوم']), pr(['الرصيد بعد الإجازة', num(after) + ' يوم']), pr(['الحالة', esc(r.status || (kind === 'lv' ? 'تمت' : ''))]), pr(['ملاحظات', esc(r.note || '')])])}
+    ${r.steps ? `<h2>مسار الاعتماد</h2>${pt(r.steps.map(s => pr([esc(s.a), who(s.by), dt((s.at || '').slice(0, 10)), esc(s.c || '')])), ['الإجراء', 'بواسطة', 'التاريخ', 'تعليق'])}` : ''}
+    <div class="sig"><div>توقيع الموظف</div><div>المدير المباشر</div><div>الموارد البشرية</div></div>`);
+}
+function settleCalc(e, reason, ed) {
+  const end = ed || today, yrs = e.hire ? Math.max(0, (day(end) - day(e.hire)) / 864e5 / 365) : 0;
+  const total = e.basic + e.house + e.trans + e.other, wage = S.base === 'الأساسي' ? e.basic : total;
+  const full = Math.min(S.cap * wage, (yrs <= 5 ? yrs * S.d1 : 5 * S.d1 + (yrs - 5) * S.d2) * wage / S.wd);
+  const pct = reason === 'استقالة' ? (yrs < 3 ? S.res[0] : yrs < 5 ? S.res[1] : yrs < 10 ? S.res[2] : S.res[3]) : 1;
+  const accStart = e.hire ? Math.max(day(e.hire), S.lstart ? day(S.lstart) : 0) : day(end);
+  const acc = e.hire ? Math.max(0, (day(end) - accStart) / 864e5 / 365) * S.ldays : 0;
+  const lbal = acc + (e.open || 0) - BAL[e.id].taken, lval = lbal * total / S.wd, adv = BAL[e.id].advBal;
+  return {end, yrs, wage, full, pct, due: full * pct, lbal, lval, adv, net: full * pct + lval - adv};
+}
+function printSettle(e, reason, ed) {
+  const s = settleCalc(e, reason, ed);
+  printDoc(`كشف نهاية خدمة ${e.name}`, `${pt([pr(['الموظف', esc(e.name), 'رقم الموظف', e.id]), pr(['الوظيفة', esc(e.job), 'تاريخ التعيين', dt(e.hire)]), pr(['سبب انتهاء الخدمة', esc(reason), 'تاريخ انتهاء الخدمة', dt(s.end)])])}
+    <h2>الحساب</h2>${pt([pr(['مدة الخدمة', num(s.yrs, 2) + ' سنة']), pr(['أجر الحساب الشهري (' + esc(S.base) + ')', s.wage]), pr(['نهاية الخدمة الكاملة', s.full]), pr(['نسبة الاستحقاق', Math.round(s.pct * 100) + '%']),
+      pr(['نهاية الخدمة المستحقة', s.due]), pr(['رصيد الإجازات في التاريخ', num(s.lbal) + ' يوم']), pr(['قيمة رصيد الإجازات', s.lval]), pr(['السلف المتبقية (تُخصم)', s.adv]), pr(['صافي التسوية النهائية', s.net], 'tot')])}
+    <p class="muted">محسوب حسب إعدادات النظام: ${S.d1} يوماً عن كل سنة من أول 5 سنوات و${S.d2} يوماً عن كل سنة بعدها، بحد أقصى ${S.cap} راتباً، وأجر اليوم = الراتب ÷ ${S.wd}. لا يشمل راتب الشهر الجاري أو بدل الإنذار. أرقام تقديرية تراجع قبل الصرف.</p>
+    <div class="sig"><div>توقيع الموظف</div><div>المحاسب</div><div>المدير</div></div>`);
+}
+function printMonthReport(y, m) {
+  const rows = D.pay.filter(p => p.y === y && (!m || p.m === m)); const ids = [...new Set(rows.map(p => p.id))];
+  const lines = ids.map(id => { const r = rows.filter(p => p.id === id), s = k => sum(r, p => p[k]);
+    return pr([esc(nameOf(id)), s('basic') + s('house') + s('trans') + s('other'), s('ot') + s('bonus'), s('gross'), s('absded'), s('advded'), s('otherded') + s('bank'), s('totded'), s('net')]); });
+  const s = k => sum(rows, p => p[k]);
+  printDoc(`تقرير الرواتب ${m ? MONTHS[m - 1] + ' ' : 'السنوي '}${y}`, pt([...lines, pr(['الإجمالي', s('basic') + s('house') + s('trans') + s('other'), s('ot') + s('bonus'), s('gross'), s('absded'), s('advded'), s('otherded') + s('bank'), s('totded'), s('net')], 'tot')],
+    ['الموظف', 'الراتب والبدلات', 'إضافي ومكافآت', 'الاستحقاقات', 'غياب', 'سلف', 'أخرى وجزاءات', 'الخصومات', 'الصافي']) + '<div class="sig"><div>إعداد المحاسب</div><div>اعتماد المدير</div></div>');
+}
+
+/* ---------- monthly payroll generation ---------- */
+async function generateMonth(y, m) {
+  if (isLocked(y, m)) { io.note = 'هذا الشهر معتمد ومقفول.'; return render(); }
+  const start = ymd(y, m, 1), end = ymd(y, m, dim(y, m));
+  const have = new Set(D.pay.filter(p => p.y === y && p.m === m).map(p => p.id));
+  const prev = (id) => D.pay.filter(p => p.id === id && p.y * 100 + p.m < y * 100 + m).sort((a, b) => (b.y * 100 + b.m) - (a.y * 100 + a.m))[0];
+  const add = [];
+  for (const e of D.emps) {
+    if (have.has(e.id)) continue;
+    if (e.hire && e.hire > end) continue;
+    if (e.end && e.end < start) continue;
+    if (e.status !== ACTIVE && !(e.end && e.end >= start)) continue;
+    const sal = salaryAt(e.id, y, m), pv = prev(e.id) || {};
+    const advs = D.adv.filter(a => a.id === e.id && a.date && a.date <= end);
+    const inst = sum(advs, a => a.n ? a.amount / a.n : a.amount), left = BAL[e.id] ? BAL[e.id].advBal : 0;
+    const pens = penFor(e.id, y, m), penAmt = sum(pens, p => p.amount);
+    let absd = unpaidDays(e.id, y, m);
+    if (e.hire && e.hire > start) absd += Math.round((day(e.hire) - day(start)) / 864e5 * (S.wd || 26) / dim(y, m));
+    const notes = [];
+    if (penAmt) notes.push('جزاءات ' + money(penAmt));
+    if (unpaidDays(e.id, y, m)) notes.push('إجازة بدون راتب ' + num(unpaidDays(e.id, y, m), 0) + ' يوم');
+    if (e.hire && e.hire > start) notes.push('تعيين في ' + dt(e.hire));
+    add.push(calcPay({y, m, id: e.id, ...sal, othrs: 0, bonus: 0, absd: r3(absd), advded: r3(Math.max(0, Math.min(inst, left))), otherded: r3(penAmt), bank: pv.bank || 0, method: pv.method || 'تحويل راتب', note: notes.join(' – ')}));
+  }
+  if (!add.length) { io.note = 'كل الموظفين لهم صفوف في هذا الشهر بالفعل.'; return render(); }
+  io.busy = true; render();
+  try {
+    await mutPay(y, rows => { for (const p of add) if (!rows.some(r => r.m === m && r.id === p.id)) rows.push(p); });
+    await logAudit('إنشاء كشف', 'pay', `${MONTHS[m - 1]} ${y}`, [{f: 'صفوف جديدة', o: '', n: String(add.length)}, {f: 'الصافي', o: '', n: money(sum(add, p => p.net))}]);
+    await touch();
+    io.note = `تمت إضافة ${add.length} صف لرواتب ${MONTHS[m - 1]} ${y}. راجع الإضافي والغياب والمكافآت ثم أرسل الشهر للاعتماد.`;
+  } catch (e) { io.note = writeErr(e); }
+  io.busy = false; render();
+}
+
+/* ---------- approvals: payroll months and leave requests ---------- */
+const monthNet = (y, m) => { const r = D.pay.filter(p => p.y === y && p.m === m); return {count: r.length, net: r3(sum(r, p => p.net))}; };
+async function closeAction(y, m, act, comment) {
+  const key = ymKey(y, m), cur = CLOSE[key] || {status: 'مسودة', steps: []}, now = new Date().toISOString(), mn = monthNet(y, m);
+  const next = {'submit': 'بانتظار الاعتماد', 'approve': 'معتمد', 'reject': 'مسودة', 'paid': 'تم الدفع', 'reopen': 'مسودة'}[act];
+  const label = {'submit': 'إرسال للاعتماد', 'approve': 'اعتماد', 'reject': 'رفض وإرجاع', 'paid': 'تسجيل الدفع', 'reopen': 'إعادة فتح'}[act];
+  const doc = {...cur, y, m, status: next, steps: [...(cur.steps || []), {a: label, by: me.id || '', at: now, c: comment || ''}]};
+  if (act === 'submit' || act === 'approve') { doc.count = mn.count; doc.net = mn.net; }
+  try { await io.db.doc('close/' + key).set(doc); await logAudit(label, 'close', `${MONTHS[m - 1]} ${y}`, [{f: 'الحالة', o: cur.status, n: next}, {f: 'الصافي', o: '', n: money(mn.net)}]); io.note = `${label}: ${MONTHS[m - 1]} ${y}.`; }
+  catch (e) { io.note = writeErr(e); }
+  render();
+}
+async function reqAction(k, act) {
+  const r = REQ.find(x => x.k === k); if (!r) return;
+  const now = new Date().toISOString();
+  const map = {'mok': ['موافقة المدير', 'بانتظار الموارد البشرية'], 'mno': ['رفض المدير', 'مرفوض'], 'hok': ['اعتماد الموارد البشرية', 'معتمد'], 'hno': ['رفض الموارد البشرية', 'مرفوض'], 'cancel': ['إلغاء الطلب', 'ملغي']};
+  const [label, next] = map[act];
+  try {
+    const steps = [...(r.steps || []), {a: label, by: me.id || '', at: now}];
+    await io.db.doc('requests/' + k).update({status: next, steps});
+    if (act === 'hok') {
+      await mutRows('plan', rows => rows.push({k: rid(), id: r.id, type: r.type, from: r.from, to: r.to, days: r.days, status: 'معتمد', note: 'من طلب إجازة معتمد' + (r.note ? ' – ' + r.note : '')}));
+      await touch();
+    }
+    await logAudit(label, 'req', labelOf('lv', r), [{f: 'الحالة', o: r.status, n: next}]);
+    io.note = label + '.';
+  } catch (e) { io.note = writeErr(e); }
+  render();
+}
+
+/* ---------- views ---------- */
+R.approvals = function () {
+  const pend = REQ.filter(r => ['بانتظار المدير', 'بانتظار الموارد البشرية'].includes(r.status));
+  const done = REQ.filter(r => !pend.includes(r)).slice(0, 30);
+  const btns = r => {
+    const b = [];
+    if (r.status === 'بانتظار المدير' && may('req-manager')) b.push(`<button class="mini ok" data-act="req:${r.k}:mok">موافقة</button><button class="mini danger" data-act="req:${r.k}:mno">رفض</button>`);
+    if (r.status === 'بانتظار الموارد البشرية' && may('req-hr')) b.push(`<button class="mini ok" data-act="req:${r.k}:hok">اعتماد</button><button class="mini danger" data-act="req:${r.k}:hno">رفض</button>`);
+    if (pend.includes(r) && r.by === me.id) b.push(`<button class="mini" data-act="req:${r.k}:cancel">إلغاء</button>`);
+    b.push(`<button class="mini" data-act="printreq:${r.k}">طباعة</button>`);
+    return `<td class="acts">${b.join('')}</td>`;
+  };
+  const reqRow = r => `<tr>${td(esc(nameOf(r.id)))}${td(esc(r.type))}${td(dt(r.from))}${td(dt(r.to))}${tn(num(r.days))}${td(pillSt(r.status))}${td(who(r.by))}<td style="white-space:normal;min-width:160px">${esc(r.note || '')}</td>${btns(r)}</tr>`;
+  const months = [...new Set([...D.pay.map(p => ymKey(p.y, p.m)), ...Object.keys(CLOSE)])].sort().reverse();
+  const crow = key => {
+    const [y, m] = key.split('-').map(Number), c = CLOSE[key] || {status: 'مسودة', steps: []}, mn = monthNet(y, m);
+    const changed = LOCKED.includes(c.status) && (Math.abs((c.net || 0) - mn.net) > 0.001 || c.count !== mn.count);
+    const b = [];
+    if (c.status === 'مسودة' && may('close-submit')) b.push(`<button class="mini" data-act="close:${key}:submit">إرسال للاعتماد</button>`);
+    if (c.status === 'بانتظار الاعتماد' && may('close-approve')) b.push(`<button class="mini ok" data-act="close:${key}:approve">اعتماد</button><button class="mini danger" data-act="close:${key}:reject">رفض</button>`);
+    if (c.status === 'معتمد' && may('close-pay')) b.push(`<button class="mini ok" data-act="close:${key}:paid">تسجيل الدفع</button>`);
+    if (LOCKED.includes(c.status) && may('close-reopen')) b.push(`<button class="mini" data-act="close:${key}:reopen">إعادة فتح</button>`);
+    const last = (c.steps || []).slice(-1)[0];
+    return `<tr>${td(MONTHS[m - 1] + ' ' + y)}${tn(mn.count)}${tn(money(mn.net))}${td(pillSt(c.status))}${td(changed ? '<b class="neg">تغيّر بعد الاعتماد</b>' : '')}${td(last ? esc(last.a) + ' – ' + who(last.by) + ' – ' + dt(last.at.slice(0, 10)) : '—')}<td class="acts">${b.join('')}</td></tr>`;
+  };
+  resolveNames([...REQ.map(r => r.by), ...REQ.flatMap(r => (r.steps || []).map(s => s.by)), ...Object.values(CLOSE).flatMap(c => (c.steps || []).map(s => s.by))]);
+  return `<h2>الاعتمادات</h2>
+  <div class="tiles">${tile('طلبات إجازة بانتظار المدير', REQ.filter(r => r.status === 'بانتظار المدير').length)}${tile('بانتظار الموارد البشرية', REQ.filter(r => r.status === 'بانتظار الموارد البشرية').length)}
+    ${tile('شهور بانتظار اعتماد الرواتب', Object.values(CLOSE).filter(c => c.status === 'بانتظار الاعتماد').length, '', 'gold')}${tile('دورك', esc(myRole()))}</div>
+  <div class="panel"><div class="row between"><h3>طلبات الإجازة الجارية</h3>${mayReq() ? '<button class="btn" data-act="add:req">+ طلب إجازة</button>' : ''}</div>
+    ${table([['الموظف'], ['النوع'], ['من'], ['إلى'], ['الأيام', 1], ['الحالة'], ['قدّمه'], ['ملاحظات'], ['']], pend.map(reqRow))}
+    <p class="note">المسار: تقديم الطلب ← موافقة المدير ← اعتماد الموارد البشرية ← يظهر في «خطة الإجازات» كمعتمد. عند أخذ الإجازة تُسجّل في «الإجازات» لتخصم من الرصيد.</p></div>
+  <div class="panel"><h3>اعتماد رواتب الشهور</h3>${table([['الشهر'], ['الصفوف', 1], ['الصافي', 1], ['الحالة'], ['تنبيه'], ['آخر إجراء'], ['']], months.map(crow))}
+    <p class="note">المسار: المحاسب يرسل الشهر للاعتماد ← المدير يعتمد أو يرفض ← المحاسب يسجل الدفع. الشهر المعتمد يُقفل ولا يقبل إضافة أو تعديل أو حذف حتى يعيد المدير فتحه، وأي اختلاف عن أرقام الاعتماد يظهر بالأحمر.</p></div>
+  ${done.length ? `<div class="panel"><h3>آخر الطلبات المنتهية</h3>${table([['الموظف'], ['النوع'], ['من'], ['إلى'], ['الأيام', 1], ['الحالة'], ['قدّمه'], ['ملاحظات'], ['']], done.map(reqRow))}</div>` : ''}`;
+};
+R.docs = function () {
+  const rows = D.docs.map(d => ({...d, ...docState(d)})).sort((a, b) => ({'منتهي': 0, 'ينتهي قريباً': 1, 'غير مسجل': 3, 'ساري': 2}[a.s] - {'منتهي': 0, 'ينتهي قريباً': 1, 'غير مسجل': 3, 'ساري': 2}[b.s]) || (a.exp || '9').localeCompare(b.exp || '9'));
+  const f = st.dstat || '';
+  const shown = rows.filter(r => !f || r.s === f);
+  return `<div class="row between"><h2>المستندات وتنبيهات الانتهاء</h2>${addBtn('docs', 'مستند')}</div>
+  <div class="tiles">${tile('منتهية', rows.filter(r => r.s === 'منتهي').length, '', rows.some(r => r.s === 'منتهي') ? 'gold' : '')}${tile('تنتهي خلال ' + (S.alert || 60) + ' يوم', rows.filter(r => r.s === 'ينتهي قريباً').length)}
+    ${tile('سارية', rows.filter(r => r.s === 'ساري').length)}${tile('غير مسجلة', rows.filter(r => r.s === 'غير مسجل').length)}</div>
+  <div class="controls"><label for="dstat">عرض<select id="dstat" data-ks="dstat">${opt('', 'الكل', f)}${['منتهي', 'ينتهي قريباً', 'ساري', 'غير مسجل'].map(s => opt(s, s, f)).join('')}</select></label></div>
+  <div class="panel">${table([['الموظف'], ['المستند'], ['الرقم'], ['الإصدار'], ['الانتهاء'], ['متبقي (يوم)', 1], ['الحالة'], ['ملاحظات'], ...actHead('docs')],
+    shown.map(r => `<tr>${td(esc(nameOf(r.id)))}${td(esc(r.type))}${td(esc(r.num || ''))}${td(dt(r.issue))}${td(dt(r.exp))}${tn(r.left == null ? '—' : `<b class="${r.left < 0 ? 'neg' : ''}">${r.left}</b>`)}${td(pillSt(r.s))}${td(esc(r.note || ''))}${rowActs('docs', r.k)}</tr>`))}
+  <p class="note">التنبيه قبل الانتهاء ${S.alert || 60} يوماً (من الإعدادات). المستندات المنتهية أو القريبة تظهر أيضاً في لوحة التحكم.</p></div>`;
+};
+R.hist = function () {
+  const rows = D.hist.slice().sort((a, b) => nameOf(a.id).localeCompare(nameOf(b.id)) || (a.eff || '').localeCompare(b.eff || ''));
+  return `<div class="row between"><h2>سجل الرواتب (تاريخ السريان)</h2>${addBtn('hist', 'تغيير راتب')}</div>
+  <div class="panel">${table([['الموظف'], ['تاريخ السريان'], ['الأساسي', 1], ['سكن', 1], ['مواصلات', 1], ['أخرى', 1], ['الإجمالي', 1], ['ملاحظات'], ...actHead('hist')],
+    rows.map(r => `<tr>${td(esc(nameOf(r.id)))}${td(dt(r.eff))}${tn(money(r.basic))}${tn(money(r.house))}${tn(money(r.trans))}${tn(money(r.other))}${tn('<b>' + money((+r.basic || 0) + (+r.house || 0) + (+r.trans || 0) + (+r.other || 0)) + '</b>')}${td(esc(r.note || ''))}${rowActs('hist', r.k)}</tr>`))}
+  <p class="note">عند زيادة راتب: أضف سطراً بتاريخ السريان والراتب الجديد، وحدّث الراتب في «الموظفون». «إنشاء كشف الشهر» يأخذ لكل شهر الراتب الساري فيه، فالشهور السابقة لا تتغير.</p></div>`;
+};
+R.pen = function () {
+  const rows = D.pen.slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  return `<div class="row between"><h2>الجزاءات والإنذارات</h2>${addBtn('pen', 'جزاء أو إنذار')}</div>
+  <div class="panel">${table([['التاريخ'], ['الموظف'], ['النوع'], ['السبب'], ['مبلغ الخصم', 1], ['يُخصم في'], ['ملاحظات'], ...actHead('pen')],
+    rows.map(r => `<tr>${td(dt(r.date))}${td(esc(nameOf(r.id)))}${td(pillSt(r.type || ''))}<td style="white-space:normal;min-width:200px">${esc(r.reason || '')}</td>${tn(r.amount ? money(r.amount) : '—')}${td(r.amount ? MONTHS[(+r.m || +(r.date || '').slice(5, 7) || 1) - 1] + ' ' + (+r.y || (r.date || '').slice(0, 4)) : '')}${td(esc(r.note || ''))}${rowActs('pen', r.k)}</tr>`))}
+  <p class="note">مبلغ الخصم يُضاف تلقائياً لخصومات الموظف عند «إنشاء كشف الشهر» لشهر الخصم.</p></div>`;
+};
+R.reports = function () {
+  const Y = st.ry || st.y, M = st.rm ?? 0;
+  const rows = D.pay.filter(p => p.y === Y), act = D.emps.filter(e => e.status === ACTIVE);
+  const depts = [...new Set([...S.depts, ...rows.map(p => p.dept)])].filter(Boolean);
+  const dcost = depts.map(d => ({d, ms: MONTHS.map((_, i) => sum(rows.filter(p => p.dept === d && p.m === i + 1), p => p.gross))})).filter(x => sum(x.ms, v => v));
+  const mt = MONTHS.map((_, i) => sum(rows.filter(p => p.m === i + 1), p => p.gross));
+  const rep = D.pay.filter(p => p.y === Y && (!M || p.m === M)); const ids = [...new Set(rep.map(p => p.id))];
+  const eosAt = (e, d) => { if (!e.hire) return null; const y = Math.max(0, (day(d) - day(e.hire)) / 864e5 / 365), w = S.base === 'الأساسي' ? e.basic : e.basic + e.house + e.trans + e.other;
+    return Math.min(S.cap * w, (y <= 5 ? y * S.d1 : 5 * S.d1 + (y - 5) * S.d2) * w / S.wd); };
+  const ends = [0, 1, 2, 3].map(k => ymd(Y + k, 12, 31));
+  const mv = MONTHS.map((_, i) => { const a = ymd(Y, i + 1, 1), b = ymd(Y, i + 1, dim(Y, i + 1));
+    return {h: D.emps.filter(e => e.hire && e.hire >= a && e.hire <= b).length, x: D.emps.filter(e => e.end && e.end >= a && e.end <= b).length, n: D.emps.filter(e => e.hire && e.hire <= b && (!e.end || e.end > b)).length}; });
+  const absRows = act.map(e => { const r = rows.filter(p => p.id === e.id); return {e, absd: sum(r, p => p.absd), absded: sum(r, p => p.absded), other: sum(r, p => p.otherded), pens: D.pen.filter(p => p.id === e.id && (p.date || '').slice(0, 4) === String(Y)).length}; });
+  return `<div class="row between"><h2>التقارير</h2><div class="row">${sel('ry', 'السنة', yearOpts(Y))}<label for="rm">الشهر<select id="rm" data-k="rm">${opt(0, 'السنة كاملة', M)}${MONTHS.map((x, i) => opt(i + 1, x, M)).join('')}</select></label></div></div>
+  <div class="panel"><div class="row between"><h3>تقرير الرواتب – ${M ? MONTHS[M - 1] + ' ' : 'سنة '}${Y}</h3><button class="btn ghost" data-act="printrep">تنزيل للطباعة</button></div>
+    ${table([['الموظف'], ['الراتب والبدلات', 1], ['إضافي ومكافآت', 1], ['الاستحقاقات', 1], ['غياب', 1], ['سلف', 1], ['أخرى وجزاءات', 1], ['الخصومات', 1], ['الصافي', 1]],
+      ids.map(id => { const r = rep.filter(p => p.id === id), s = k => sum(r, p => p[k]); return `<tr>${td(esc(nameOf(id)))}${tn(money(s('basic') + s('house') + s('trans') + s('other')))}${tn(money(s('ot') + s('bonus')))}${tn(money(s('gross')))}${tn(money(s('absded')))}${tn(money(s('advded')))}${tn(money(s('otherded') + s('bank')))}${tn(money(s('totded')))}${tn('<b>' + money(s('net')) + '</b>')}</tr>`; }),
+      (s => `<tr><td>الإجمالي</td>${tn(money(s('basic') + s('house') + s('trans') + s('other')))}${tn(money(s('ot') + s('bonus')))}${tn(money(s('gross')))}${tn(money(s('absded')))}${tn(money(s('advded')))}${tn(money(s('otherded') + s('bank')))}${tn(money(s('totded')))}${tn(money(s('net')))}</tr>`)(k => sum(rep, p => p[k])))}</div>
+  <div class="panel"><h3>تكلفة الموظفين حسب القسم – ${Y}</h3>${table([['القسم'], ...MONTHS.map(m => [m.slice(0, 5), 1]), ['الإجمالي', 1]],
+    dcost.map(x => `<tr>${td(esc(x.d))}${x.ms.map(v => `<td class="n ${v ? '' : 'mz'}">${v ? num(v, 0) : '·'}</td>`).join('')}${tn('<b>' + num(sum(x.ms, v => v), 0) + '</b>')}</tr>`),
+    `<tr><td>الإجمالي</td>${mt.map(v => tn(v ? num(v, 0) : '·')).join('')}${tn(num(sum(mt, v => v), 0))}</tr>`)}<p class="note">إجمالي الاستحقاقات قبل الخصومات.</p></div>
+  <div class="grid2">
+    <div class="panel"><h3>الغياب والخصومات – ${Y}</h3>${table([['الموظف'], ['أيام غياب', 1], ['خصم الغياب', 1], ['خصومات أخرى', 1], ['جزاءات', 1]],
+      absRows.filter(r => r.absd || r.other || r.pens).map(r => `<tr>${td(esc(r.e.name))}${tn(num(r.absd))}${tn(money(r.absded))}${tn(money(r.other))}${tn(r.pens || '—')}</tr>`))}</div>
+    <div class="panel"><h3>حركة الموظفين – ${Y}</h3>${table([['الشهر'], ['تعيين', 1], ['انتهاء خدمة', 1], ['العدد آخر الشهر', 1]],
+      mv.map((x, i) => `<tr>${td(MONTHS[i])}${tn(x.h || '·')}${tn(x.x || '·')}${tn(x.n)}</tr>`))}<p class="note">العدد يشمل من لهم تاريخ تعيين فقط.</p></div>
+  </div>
+  <div class="panel"><h3>التزامات نهاية الخدمة المستقبلية</h3>${table([['الموظف'], ['تاريخ التعيين'], ...ends.map(d => ['في ' + dt(d), 1])],
+    act.map(e => `<tr>${td(esc(e.name))}${td(dt(e.hire))}${ends.map(d => { const v = eosAt(e, d); return tn(v == null ? '—' : money(v)); }).join('')}</tr>`),
+    `<tr><td colspan="2">الإجمالي</td>${ends.map(d => tn(money(sum(act, e => eosAt(e, d) || 0)))).join('')}</tr>`)}
+    <p class="note">مكافأة نهاية الخدمة الكاملة لو انتهت الخدمة في نهاية كل سنة، بالراتب الحالي.</p></div>`;
+};
+R.audit = function () {
+  if (!may('audit')) return '<div class="panel"><p class="empty">سجل التعديلات متاح للمدير والمحررين فقط.</p></div>';
+  const f = st.acol || '';
+  const list = AUD.filter(a => !f || a.col === f);
+  resolveNames(list.map(a => a.by));
+  return `<h2>سجل التعديلات</h2>
+  <div class="controls"><label for="acol">القسم<select id="acol" data-ks="acol">${opt('', 'الكل', f)}${[...new Set(AUD.map(a => a.col))].map(c => opt(c, c, f)).join('')}</select></label></div>
+  <div class="panel">${table([['الوقت'], ['المستخدم'], ['الإجراء'], ['القسم'], ['السجل'], ['التغييرات']],
+    list.map(a => `<tr>${td(dt(a.at.slice(0, 10)) + ' ' + a.at.slice(11, 16))}${td(who(a.by))}${td(pillSt(a.act))}${td(esc(a.col))}${td(esc(a.key))}<td style="white-space:normal;min-width:280px">${(a.ch || []).map(c => `<div class="chg"><b>${esc(c.f)}:</b> ${c.o !== '' ? `<s>${esc(c.o)}</s> ← ` : ''}${esc(c.n)}</div>`).join('')}</td></tr>`))}
+  <p class="note">آخر ${AUD.length} تعديل. كل إضافة أو تعديل أو حذف أو اعتماد أو رفع ملف يُسجّل تلقائياً باسم المستخدم والوقت والقيمة القديمة والجديدة.</p></div>`;
+};
+R.admin = function () {
+  const ids = [...new Set([...Object.keys(USERS), ...Object.keys(ROLES), me.id].filter(u => u && u !== '_init'))];
+  resolveNames(ids);
+  const s = S;
+  return `<h2>الإعدادات والصلاحيات</h2>
+  <div class="panel"><div class="row between"><h3>إعدادات الحساب</h3>${may('settings') ? '<button class="btn ghost" data-act="add:settings">تعديل الإعدادات</button>' : ''}</div>
+    <div class="kv">${kv('اسم العيادة', esc(s.clinic))}${kv('العملة', esc(s.currency))}${kv('أجر اليوم', 'الراتب ÷ ' + s.wd)}${kv('معامل الإضافي', s.mult)}${kv('الإجازة السنوية', s.ldays + ' يوم')}
+      ${kv('نهاية الخدمة', `${s.d1} يوم/سنة لأول 5، ثم ${s.d2}، بحد ${s.cap} راتب`)}${kv('أساس نهاية الخدمة', esc(s.base))}${kv('تنبيه المستندات', (s.alert || 60) + ' يوم')}</div></div>
+  <div class="panel"><div class="row between"><h3>المستخدمون والأدوار</h3>${may('roles') ? '<button class="btn" data-act="add:newuser">+ إضافة مستخدم جديد</button>' : ''}</div>
+    ${table([['المستخدم'], ['البريد الإلكتروني'], ['آخر دخول'], ['الدور'], ['إدارة الصلاحية']], ids.map(u => {
+      const em = (USERS[u] && USERS[u].email) || '';
+      return `<tr>${td(who(u) + (u === me.id ? ' (أنت)' : ''))}<td dir="ltr" style="text-align:end">${esc(em || '—')}</td>${td(USERS[u] && USERS[u].seen ? dt(USERS[u].seen) : '—')}${td(pillSt(roleOf(u)))}<td class="acts">${may('roles') && u !== me.id ? `<label class="sr" for="role_${esc(u)}">الدور</label><select id="role_${esc(u)}" data-role="${esc(u)}" style="min-width:110px;padding:3px 6px;font-size:12.5px">${opt('', 'بدون دور', (ROLES[u] || {}).role || '')}${ROLES_LIST.map(r => opt(r, r, (ROLES[u] || {}).role || '')).join('')}</select> ` : ''}${may('roles') && em ? `<button class="mini" data-act="resetpw:${esc(u)}">تغيير كلمة المرور</button>` : ''}</td></tr>`;
+    }))}
+    <div class="note"><p><b>صلاحيات الأدوار (مطبّقة لحظياً في قاعدة البيانات):</b></p><ul>
+      <li><b>مدير</b>: كل الصلاحيات، إضافة المستخدمين وتغيير أدوارهم، اعتماد الرواتب والإجازات، الإعدادات، واسترجاع النسخ الاحتياطية.</li>
+      <li><b>موارد بشرية</b>: الموظفون والمستندات والإجازات والخطة والجزاءات، واعتماد طلبات الإجازة بعد المدير.</li>
+      <li><b>محاسب</b>: كشف الرواتب والسلف وسجل الرواتب، وإرسال الشهر للاعتماد وتسجيل الدفع.</li>
+      <li><b>مشاهد</b> أو بدون دور: استعراض البيانات وتقديم طلبات الإجازة فقط بدون تعديل.</li></ul>
+      <p>يمكنك إضافة أي مستخدم جديد ببريد إلكتروني وكلمة مرور شخصية من زر «+ إضافة مستخدم جديد» بالأعلى، وسيتمكن من الدخول فوراً مع مزامنة لحظية لجميع التعديلات.</p></div></div>`;
+};
+
+/* ---------- backups ---------- */
+async function snapshotAll() {
+  const hr = {}; for (const k of [...ROWDOCS, 'settings', 'meta']) { const s = await io.db.doc('hr/' + k).get(); if (s.exists) hr[k] = s.data(); }
+  const pay = {}; for (const y of io.payYears) { const s = await io.db.doc('pay/' + y).get(); if (s.exists) pay[y] = s.data(); }
+  return {hr, pay};
+}
+async function autoBackup() {
+  if (!may('import') || !io.db) return;
+  const id = today + '__hr';
+  try {
+    const s = await io.db.doc('backups/' + id).get(); if (s.exists) return;
+    const all = await snapshotAll(); if (!all.hr.emps) return;
+    await io.db.doc('backups/' + id).set({at: new Date().toISOString(), by: me.id || '', hr: all.hr});
+    for (const y of Object.keys(all.pay)) await io.db.doc(`backups/${today}__pay${y}`).set({at: new Date().toISOString(), pay: all.pay[y]});
+    const list = await io.db.collection('backups').get(); const dates = [...new Set(list.docs.map(d => d.id.split('__')[0]))].sort().reverse();
+    const old = new Set(dates.slice(30)); for (const d of list.docs) if (old.has(d.id.split('__')[0])) await io.db.doc('backups/' + d.id).delete();
+  } catch (e) { /* backups are best effort */ }
+}
+async function listBackups() {
+  try { const l = await io.db.collection('backups').get(); io.backups = [...new Set(l.docs.map(d => d.id.split('__')[0]))].sort().reverse(); }
+  catch (e) { io.backups = []; io.note = 'تعذر قراءة النسخ الاحتياطية.'; }
+  render();
+}
+async function restoreBackup(date) {
+  if (!may('restore')) return;
+  io.busy = true; io.note = 'جاري استرجاع نسخة ' + dt(date) + '…'; render();
+  try {
+    const l = await io.db.collection('backups').get(); const mine = l.docs.filter(d => d.id.split('__')[0] === date);
+    const hrDoc = mine.find(d => d.id.endsWith('__hr')); if (!hrDoc) throw new Error('missing');
+    const hr = hrDoc.data().hr;
+    for (const k of Object.keys(hr)) await io.db.doc('hr/' + k).set(hr[k]);
+    const ys = mine.filter(d => d.id.includes('__pay')).map(d => [d.id.split('__pay')[1], d.data().pay]);
+    for (const [y, p] of ys) await io.db.doc('pay/' + y).set(p);
+    for (const y of io.payYears) if (!ys.some(x => x[0] === String(y))) await io.db.doc('pay/' + y).delete();
+    await touch(); await logAudit('استرجاع نسخة', 'backup', dt(date), []);
+    io.note = 'تم استرجاع نسخة ' + dt(date) + '.';
+  } catch (e) { io.note = 'تعذر الاسترجاع: ' + writeErr(e); }
+  io.busy = false; render();
+}
+
+/* ---------- summary copy for visitors without access ---------- */
+function summaryData() {
+  const act = D.emps.filter(e => e.status === ACTIVE);
+  const months = {}; for (const p of D.pay) { const k = ymKey(p.y, p.m); months[k] = months[k] || {y: p.y, m: p.m, n: 0, gross: 0, net: 0}; months[k].n++; months[k].gross = r3(months[k].gross + p.gross); months[k].net = r3(months[k].net + p.net); }
+  const keep = r => ({id: r.id, type: r.type, from: r.from, to: r.to, days: r.days});
+  return {clinic: S.clinic, currency: S.currency, asof: today, depts: S.depts, ltypes: S.ltypes,
+    emps: act.map(e => ({id: e.id, name: e.name, job: e.job, dept: e.dept, hire: e.hire, status: e.status})),
+    lv: D.lv.filter(l => l.from && l.to && act.some(e => e.id === l.id)).map(keep), plan: D.plan.filter(p => p.status !== 'ملغاة' && act.some(e => e.id === p.id)).map(r => ({...keep(r), status: r.status})),
+    months: Object.values(months).sort((a, b) => a.y - b.y || a.m - b.m)};
+}
+function pageHtml(sm) {
+  const json = JSON.stringify(sm).replace(/<\//g, '<\\/');
+  return '<!DOCTYPE html>\n<html lang="ar" dir="rtl">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>نظام شؤون موظفي العيادة</title>\n'
+    + '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@500;700&display=swap">\n'
+    + '<style id="css">' + document.getElementById('css').textContent + '</style>\n</head>\n<body>\n' + document.getElementById('shellmark').outerHTML + '\n<main id="app"></main>\n<div id="modal"></div>\n'
+    + '<script id="snap" type="application/json">' + json + '<\/script>\n<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"><\/script>\n'
+    + '<script id="main">' + document.getElementById('main').textContent + '<\/script>\n</body>\n</html>\n';
+}
+async function publishSummary() {
+  if (!io.art) { io.note = 'تحديث نسخة العرض غير متاح في هذا العرض.'; return render(); }
+  io.busy = true; io.note = 'جاري تحديث نسخة العرض… الصفحة ستعيد التحميل.'; render();
+  try { await io.db.doc('hr/meta').update({summaryAt: new Date().toISOString()}).catch(() => {}); await logAudit('تحديث نسخة العرض', 'backup', '', []); await io.art.publish(pageHtml(summaryData())); }
+  catch (e) { io.busy = false; io.note = e && (e.code === 'not_writer' || e.code === 'not_granted') ? 'تحديث نسخة العرض متاح لصاحب الصفحة والمحررين فقط.' : e && e.code === 'conflict' ? 'تم تحديث الصفحة من جهاز آخر في نفس الوقت. حاول مرة أخرى.' : 'تعذر تحديث نسخة العرض.'; render(); }
+}
+
+/* ---------- summary views (no sign-in, no sensitive data) ---------- */
+let SUM = null;
+const SVIEWS = [['summary', 'الملخص'], ['directory', 'دليل الموظفين'], ['splan', 'خطة الإجازات']];
+const RS = {
+  summary() {
+    const last = SUM.months.slice(-12), mx = Math.max(1, ...last.map(x => x.net));
+    const depts = [...new Set(SUM.emps.map(e => e.dept))].map(d => ({d, n: SUM.emps.filter(e => e.dept === d).length}));
+    const now = SUM.plan.concat(SUM.lv).filter(r => r.from <= today && r.to >= today).length;
+    return `<div class="panel infoband"><b>نسخة العرض المختصرة.</b> لا تحتوي الرواتب الفردية أو الأرقام المدنية أو الحسابات البنكية. لرؤية النظام الكامل والتعديل: سجّل الدخول بحسابك الشخصي للوصول للنظام الكامل.</div>
+    <div class="tiles">${tile('الموظفون على رأس العمل', SUM.emps.length)}${tile('في إجازة اليوم', now)}${tile('إجازات قادمة', SUM.plan.filter(p => p.to >= today).length)}${last.length ? tile('صافي رواتب ' + MONTHS[last[last.length - 1].m - 1] + ' ' + last[last.length - 1].y, money(last[last.length - 1].net), SUM.currency) : ''}</div>
+    <div class="grid2"><div class="panel"><h3>إجمالي صافي الرواتب – آخر 12 شهر</h3>${table([['الشهر'], ['الموظفون', 1], ['الصافي', 1], ['']], last.map(x => `<tr>${td(MONTHS[x.m - 1] + ' ' + x.y)}${tn(x.n)}${tn(money(x.net))}<td style="min-width:90px"><div class="bar" style="width:${x.net / mx * 100}%"></div></td></tr>`))}</div>
+    <div class="panel"><h3>الموظفون حسب القسم</h3>${table([['القسم'], ['العدد', 1]], depts.map(x => `<tr>${td(esc(x.d))}${tn(x.n)}</tr>`))}</div></div>`;
+  },
+  directory() {
+    return `<h2>دليل الموظفين</h2><div class="panel">${table([['الرقم'], ['الاسم'], ['الوظيفة'], ['القسم'], ['تاريخ التعيين']], SUM.emps.map(e => `<tr>${td(e.id)}${td(esc(e.name))}${td(esc(e.job))}${td(esc(e.dept))}${td(dt(e.hire))}</tr>`))}</div>`;
+  },
+  splan() {
+    const Y = st.py, M = st.pm, live = SUM.plan, act = SUM.emps;
+    const saveD = D; D = {...D, lv: SUM.lv, plan: SUM.plan};
+    const yb = yearBoard(Y, act, live); D = saveD;
+    const nd = dim(Y, M), days = Array.from({length: nd}, (_, i) => i + 1);
+    const fri = d => new Date(Date.UTC(Y, M - 1, d)).getUTCDay() === 5;
+    const code = (id, d) => { const x = ymd(Y, M, d), on = r => r.id === id && r.from <= x && r.to >= x;
+      if (SUM.lv.some(on) || live.some(p => p.status === 'تمت' && on(p))) return 'f'; if (live.some(p => p.status === 'معتمد' && on(p))) return 'a'; if (live.some(p => p.status === 'مخطط' && on(p))) return 'p'; return ''; };
+    const grid = act.map(e => ({e, c: days.map(d => code(e.id, d))})), LBL = {f: 'ف', a: 'ع', p: 'م'};
+    const ys = []; for (let y = Math.min(2026, new Date().getFullYear()); y <= new Date().getFullYear() + 1; y++) ys.push(y);
+    return `<h2>خطة الإجازات</h2><div class="controls">${sel('py', 'السنة', ys.map(y => opt(y, y, Y)).join(''))}${sel('pm', 'شهر الجدول اليومي', monthOpts(M))}</div>
+    <div class="panel"><h3>لوحة الإجازات السنوية – ${Y}</h3><div class="key"><span><i style="background:var(--gold)"></i>تمت</span><span><i style="background:var(--accent)"></i>معتمدة</span><span><i style="box-shadow:inset 0 0 0 2px var(--accent)"></i>مخططة</span></div><div class="scroll">${yb}</div></div>
+    <div class="panel"><h3>الجدول اليومي – ${MONTHS[M - 1]} ${Y}</h3><div class="scroll"><table class="cal"><thead><tr><th></th>${days.map(d => `<th class="d${fri(d) ? ' fri' : ''}">${d}</th>`).join('')}</tr></thead>
+      <tbody>${grid.map(g => `<tr><td class="nm">${esc(g.e.name)}</td>${g.c.map((c, i) => `<td class="c ${c}${!c && fri(i + 1) ? ' fri' : ''}">${LBL[c] || ''}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div>`;
+  }
+};
+
+/* ---------- Excel import / export ---------- */
+const SHEETS = {set: 'الإعدادات', emp: 'الموظفين', pay: 'كشف الرواتب', adv: 'السلف', lv: 'الإجازات'};
+const XS = {plan: 'خطة الإجازات', docs: 'المستندات', hist: 'سجل الرواتب', pen: 'الجزاءات والإنذارات'};
+const HEAD = {
+  emp: ['رقم الموظف', 'الاسم', 'الوظيفة', 'القسم', 'الجنسية', 'الرقم المدني', 'الهاتف', 'تاريخ التعيين', 'الحالة', 'تاريخ نهاية الخدمة', 'الراتب الأساسي', 'بدل سكن', 'بدل مواصلات', 'بدلات أخرى', 'إجمالي الراتب', 'البنك', 'رقم الحساب / IBAN', 'رصيد إجازات افتتاحي (يوم)', 'ملاحظات'],
+  pay: ['السنة', 'الشهر', 'رقم الموظف', 'الاسم', 'القسم', 'الأساسي', 'بدل سكن', 'بدل مواصلات', 'بدلات أخرى', 'ساعات إضافي', 'قيمة الإضافي', 'مكافآت / حوافز', 'إجمالي الاستحقاقات', 'أيام غياب / بدون راتب', 'خصم الغياب', 'خصم قسط سلفة', 'خصومات أخرى', 'إجمالي الخصومات', 'صافي الراتب', 'ملاحظات', 'عمولة البنك', 'طريقة الدفع'],
+  adv: ['تاريخ السلفة', 'رقم الموظف', 'الاسم', 'مبلغ السلفة', 'عدد الأقساط', 'القسط الشهري', 'ملاحظات'],
+  lv: ['رقم الموظف', 'الاسم', 'نوع الإجازة', 'من تاريخ', 'إلى تاريخ', 'عدد الأيام', 'ملاحظات'],
+  plan: ['رقم الموظف', 'الاسم', 'نوع الإجازة', 'من تاريخ', 'إلى تاريخ', 'عدد الأيام', 'الحالة', 'ملاحظات'],
+  docs: ['رقم الموظف', 'الاسم', 'نوع المستند', 'رقم المستند', 'تاريخ الإصدار', 'تاريخ الانتهاء', 'الأيام المتبقية', 'الحالة', 'ملاحظات'],
+  hist: ['رقم الموظف', 'الاسم', 'تاريخ السريان', 'الأساسي', 'بدل سكن', 'بدل مواصلات', 'بدلات أخرى', 'الإجمالي', 'ملاحظات'],
+  pen: ['التاريخ', 'رقم الموظف', 'الاسم', 'النوع', 'السبب', 'مبلغ الخصم', 'سنة الخصم', 'شهر الخصم', 'ملاحظات']
+};
+const SETLAB = ['اسم العيادة', 'العملة', 'أيام العمل في الشهر (لحساب أجر اليوم)', 'ساعات العمل اليومية', 'معامل أجر الساعة الإضافية', 'أيام الإجازة السنوية', 'نهاية الخدمة: أيام الأجر عن كل سنة (أول 5 سنوات)', 'نهاية الخدمة: أيام الأجر عن كل سنة (بعد 5 سنوات)', 'الحد الأقصى لنهاية الخدمة (عدد الرواتب الشهرية)', 'أساس حساب نهاية الخدمة (الإجمالي / الأساسي)', 'نسبة الاستقالة: أقل من 3 سنوات', 'نسبة الاستقالة: من 3 إلى أقل من 5 سنوات', 'نسبة الاستقالة: من 5 إلى أقل من 10 سنوات', 'نسبة الاستقالة: 10 سنوات فأكثر', 'تاريخ بداية احتساب الإجازات'];
+const isN = v => typeof v === 'number' && isFinite(v);
+const nv = v => isN(v) ? v : (v != null && String(v).trim() !== '' && !isNaN(+v) ? +v : 0);
+const tx = v => v == null ? '' : String(v).trim();
+const toIso = v => {
+  if (isN(v)) return new Date(Math.round((v - 25569) * 864e5)).toISOString().slice(0, 10);
+  const s = tx(v); let m;
+  if ((m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))) return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`;
+  if ((m = s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/))) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+  return null;
+};
+const serial = iso => iso ? {t: 'n', v: day(iso) / 864e5 + 25569, z: 'dd/mm/yyyy'} : null;
+
+function parseWorkbook(buf) {
+  const wb = XLSX.read(buf, {type: 'array'});
+  const miss = Object.values(SHEETS).filter(n => !wb.Sheets[n]);
+  if (miss.length) throw new Error('الملف ينقصه الصفحات: ' + miss.join('، ') + '. استخدم الملف الذي نزّلته من هنا أو ملف النظام.');
+  const c = a => { const x = wb.Sheets[SHEETS.set][a]; return x ? x.v : null; };
+  const list = (col, a, b) => { const o = []; for (let r = a; r <= b; r++) { const v = tx(c(col + r)); if (v) o.push(v); } return o; };
+  const grid = name => XLSX.utils.sheet_to_json(wb.Sheets[name], {header: 1, raw: true, defval: null, range: 4});
+  const settings = {clinic: tx(c('C4')), currency: tx(c('C5')), wd: nv(c('C6')) || 26, hrs: nv(c('C7')) || 8, mult: nv(c('C8')) || 1, ldays: nv(c('C9')),
+    d1: nv(c('C10')), d2: nv(c('C11')), cap: nv(c('C12')), base: tx(c('C13')) || 'الإجمالي', res: [14, 15, 16, 17].map(r => nv(c('C' + r))), lstart: toIso(c('C18')),
+    alert: nv(c('C23')) || S.alert || 60, depts: list('F', 4, 11), jobs: list('G', 4, 19), ltypes: list('H', 4, 11)};
+  if (!settings.ltypes.length) settings.ltypes = ['سنوية'];
+  const warn = [];
+  const emps = grid(SHEETS.emp).filter(r => isN(r[0])).map(r => ({id: r[0], name: tx(r[1]), job: tx(r[2]), dept: tx(r[3]), nat: tx(r[4]), civil: tx(r[5]), phone: tx(r[6]), hire: toIso(r[7]),
+    status: tx(r[8]) || ACTIVE, end: toIso(r[9]), basic: nv(r[10]), house: nv(r[11]), trans: nv(r[12]), other: nv(r[13]), bank: tx(r[15]), iban: tx(r[16]), open: nv(r[17]), note: tx(r[18])}));
+  const byId = Object.fromEntries(emps.map(e => [e.id, e]));
+  if (new Set(emps.map(e => e.id)).size !== emps.length) warn.push('يوجد رقم موظف مكرر في صفحة الموظفين.');
+  if (emps.some(e => !e.hire)) warn.push('بعض الموظفين بدون تاريخ تعيين، فلن تُحسب لهم نهاية الخدمة.');
+  let unknown = 0;
+  const pay = grid(SHEETS.pay).filter(r => isN(r[0]) && isN(r[1]) && isN(r[2]) && r[1] >= 1 && r[1] <= 12).map(r => {
+    const e = byId[r[2]]; if (!e) unknown++;
+    const pick = (v, k) => isN(v) ? v : (e ? e[k] : 0);
+    const p = {y: r[0], m: r[1], id: r[2], basic: pick(r[5], 'basic'), house: pick(r[6], 'house'), trans: pick(r[7], 'trans'), other: pick(r[8], 'other'),
+      othrs: nv(r[9]) + nv(r[23]), bonus: nv(r[11]), absd: nv(r[13]) + nv(r[22]), advded: nv(r[15]), otherded: r3(nv(r[16]) + nv(r[25]) + nv(r[27])),
+      note: [tx(r[19]), nv(r[25]) ? 'خصم تأخير ' + nv(r[25]) : '', nv(r[27]) ? 'جزاءات ' + nv(r[27]) : ''].filter(Boolean).join(' – '), bank: nv(r[20]), method: tx(r[21])};
+    const fixed = p.basic + p.house + p.trans + p.other;
+    p.ot = r3(p.othrs * p.basic / settings.wd / settings.hrs * settings.mult);
+    p.gross = r3(fixed + p.ot + p.bonus); p.absded = r3(p.absd * fixed / settings.wd);
+    p.totded = r3(p.absded + p.advded + p.otherded + p.bank); p.net = r3(p.gross - p.totded);
+    return p;
+  });
+  if (unknown) warn.push(`${unknown} صف رواتب برقم موظف غير موجود في صفحة الموظفين.`);
+  const dupPay = pay.length - new Set(pay.map(p => p.y + '|' + p.m + '|' + p.id)).size; if (dupPay) warn.push(`${dupPay} صف رواتب مكرر (نفس الموظف والشهر).`);
+  const adv = grid(SHEETS.adv).filter(r => isN(r[1])).map(r => ({k: rid(), date: toIso(r[0]), id: r[1], amount: nv(r[3]), n: nv(r[4]), note: tx(r[6])}));
+  const dd = (f, t, v) => isN(v) ? v : (f && t ? (day(t) - day(f)) / 864e5 + 1 : 0);
+  const lv = grid(SHEETS.lv).filter(r => isN(r[0])).map(r => { const f = toIso(r[3]), t = toIso(r[4]); return {k: rid(), id: r[0], type: tx(r[2]) || settings.ltypes[0], from: f, to: t, days: dd(f, t, r[5]), note: tx(r[6])}; });
+  if (!emps.length) throw new Error('لا يوجد موظفون في صفحة الموظفين. تأكد أن البيانات تبدأ من الصف الخامس.');
+  const opt_ = (name, fn) => wb.Sheets[name] ? grid(name).filter(r => isN(r[name === XS.pen ? 1 : 0])).map(fn) : null;
+  const plan = opt_(XS.plan, r => { const f = toIso(r[3]), t = toIso(r[4]), s = tx(r[6]); return {k: rid(), id: r[0], type: tx(r[2]) || settings.ltypes[0], from: f, to: t, days: dd(f, t, r[5]), status: PSTATS.includes(s) ? s : 'مخطط', note: tx(r[7])}; });
+  const docs = opt_(XS.docs, r => ({k: rid(), id: r[0], type: tx(r[2]), num: tx(r[3]), issue: toIso(r[4]), exp: toIso(r[5]), note: tx(r[8])}));
+  const hist = opt_(XS.hist, r => ({k: rid(), id: r[0], eff: toIso(r[2]), basic: nv(r[3]), house: nv(r[4]), trans: nv(r[5]), other: nv(r[6]), note: tx(r[8])}));
+  const pen = opt_(XS.pen, r => ({k: rid(), date: toIso(r[0]), id: r[1], type: tx(r[3]), reason: tx(r[4]), amount: nv(r[5]), y: isN(r[6]) ? r[6] : null, m: isN(r[7]) ? r[7] : null, note: tx(r[8])}));
+  for (const [n, v] of [['خطة الإجازات', plan], ['المستندات', docs], ['سجل الرواتب', hist], ['الجزاءات والإنذارات', pen]]) if (!v) warn.push(`الملف لا يحتوي صفحة «${n}»، فستبقى بياناتها الحالية في الموقع كما هي.`);
+  const lockedChanged = [...new Set(pay.map(p => ymKey(p.y, p.m)))].concat(Object.keys(CLOSE)).filter((k, i, a) => a.indexOf(k) === i).filter(k => {
+    const c = CLOSE[k]; if (!c || !LOCKED.includes(c.status)) return false; const [y, m] = k.split('-').map(Number);
+    const r = pay.filter(p => p.y === y && p.m === m); return r.length !== c.count || Math.abs(r3(sum(r, p => p.net)) - (c.net || 0)) > 0.001; });
+  if (lockedChanged.length) warn.push('الملف يغيّر شهوراً معتمدة: ' + lockedChanged.map(k => { const [y, m] = k.split('-'); return MONTHS[+m - 1] + ' ' + y; }).join('، ') + '. الحفظ متاح للمدير فقط، وسيظهر التغيير بالأحمر في الاعتمادات.');
+  return {settings, emps, pay, adv, lv, plan, docs, hist, pen, warn, lockedChanged};
+}
+
+function buildWorkbook() {
+  const wb = XLSX.utils.book_new(); wb.Workbook = {Views: [{RTL: true}]};
+  const add = (name, title, head, rows, widths) => {
+    const ws = XLSX.utils.aoa_to_sheet([[title], [], ['البيانات تبدأ من الصف الخامس. لا تغيّر ترتيب الأعمدة أو أسماء الصفحات.'], head, ...rows]);
+    ws['!cols'] = widths.map(w => ({wch: w})); XLSX.utils.book_append_sheet(wb, ws, name);
+  };
+  const Q = "'" + SHEETS.set + "'!";
+  const sv = [S.clinic, S.currency, S.wd, S.hrs || 8, S.mult || 1, S.ldays, S.d1, S.d2, S.cap, S.base, ...S.res, serial(S.lstart)];
+  const lists = [S.depts, S.jobs || [], S.ltypes, [ACTIVE, 'منتهي الخدمة']];
+  const setRows = [['الإعدادات العامة'], [], [null, 'البند', 'القيمة', null, null, 'الأقسام', 'الوظائف', 'أنواع الإجازات', 'حالة الموظف']];
+  for (let i = 0; i < 20; i++) setRows.push([null, SETLAB[i] ?? (i === 19 ? 'التنبيه قبل انتهاء المستند (يوم)' : null), i === 19 ? (S.alert || 60) : (sv[i] ?? null), null, null, ...lists.map(l => l[i] ?? null)]);
+  const wsS = XLSX.utils.aoa_to_sheet(setRows); wsS['!cols'] = [3, 46, 18, 3, 3, 18, 20, 16, 16].map(w => ({wch: w}));
+  add(SHEETS.emp, 'سجل الموظفين', HEAD.emp, D.emps.map((e, i) => [e.id, e.name, e.job, e.dept, e.nat, e.civil, e.phone, serial(e.hire), e.status, serial(e.end), e.basic, e.house, e.trans, e.other,
+    {t: 'n', v: e.basic + e.house + e.trans + e.other, f: `SUM(K${i + 5}:N${i + 5})`}, e.bank, e.iban, e.open, e.note]), [11, 26, 18, 14, 12, 16, 14, 13, 16, 13, 12, 11, 11, 11, 13, 14, 26, 14, 26]);
+  const pays = [...D.pay].sort((a, b) => a.y - b.y || a.m - b.m || a.id - b.id);
+  add(SHEETS.pay, 'كشف الرواتب الشهري', HEAD.pay, pays.map((p, i) => { const r = i + 5; return [p.y, p.m, p.id, p.name, p.dept, p.basic, p.house, p.trans, p.other, p.othrs || null,
+    {t: 'n', v: p.ot, f: `ROUND(J${r}*F${r}/${Q}$C$6/${Q}$C$7*${Q}$C$8,3)`}, p.bonus || null, {t: 'n', v: p.gross, f: `SUM(F${r}:I${r})+K${r}+L${r}`}, p.absd || null,
+    {t: 'n', v: p.absded, f: `ROUND(N${r}*SUM(F${r}:I${r})/${Q}$C$6,3)`}, p.advded || null, p.otherded || null, {t: 'n', v: p.totded, f: `O${r}+P${r}+Q${r}+U${r}`}, {t: 'n', v: p.net, f: `M${r}-R${r}`}, p.note || null, p.bank || null, p.method || null]; }),
+    [8, 8, 11, 24, 13, 12, 11, 11, 11, 10, 12, 12, 14, 11, 12, 12, 12, 13, 14, 24, 12, 14]);
+  add(SHEETS.adv, 'سجل السلف', HEAD.adv, D.adv.map(a => [serial(a.date), a.id, nameOf(a.id), a.amount, a.n || null, a.n ? r3(a.amount / a.n) : null, a.note]), [14, 12, 26, 14, 12, 14, 34]);
+  add(SHEETS.lv, 'سجل الإجازات', HEAD.lv, D.lv.map(l => [l.id, nameOf(l.id), l.type, serial(l.from), serial(l.to), l.days, l.note]), [12, 26, 14, 14, 14, 12, 34]);
+  add(XS.plan, 'خطة الإجازات', HEAD.plan, [...D.plan].sort((a, b) => (a.from || '').localeCompare(b.from || '')).map(p => [p.id, nameOf(p.id), p.type, serial(p.from), serial(p.to), p.days, p.status, p.note || null]), [12, 30, 14, 14, 14, 12, 12, 40]);
+  add(XS.docs, 'مستندات الموظفين', HEAD.docs, D.docs.map(d => { const s = docState(d); return [d.id, nameOf(d.id), d.type, d.num || null, serial(d.issue), serial(d.exp), s.left, s.s, d.note || null]; }), [11, 30, 20, 20, 14, 14, 12, 14, 30]);
+  add(XS.hist, 'سجل الرواتب', HEAD.hist, D.hist.map(h => [h.id, nameOf(h.id), serial(h.eff), h.basic || null, h.house || null, h.trans || null, h.other || null, (+h.basic || 0) + (+h.house || 0) + (+h.trans || 0) + (+h.other || 0), h.note || null]), [11, 30, 14, 12, 12, 12, 12, 13, 40]);
+  add(XS.pen, 'سجل الجزاءات والإنذارات', HEAD.pen, D.pen.map(p => [serial(p.date), p.id, nameOf(p.id), p.type, p.reason || null, p.amount || null, p.y || null, p.m || null, p.note || null]), [13, 11, 30, 16, 40, 12, 10, 10, 30]);
+  XLSX.utils.book_append_sheet(wb, wsS, SHEETS.set);
+  return XLSX.write(wb, {type: 'array', bookType: 'xlsx'});
+}
+async function doExport() {
+  if (!io.dl) { io.note = 'التنزيل غير متاح في هذا العرض.'; return render(); }
+  try { await io.dl.save({filename: 'بيانات_HR_' + today + '.xlsx', data: buildWorkbook()}); io.note = 'تم تجهيز الملف للتنزيل.'; }
+  catch (e) { io.note = e && e.code === 'declined' ? 'تم إلغاء التنزيل.' : 'تعذر تنزيل الملف. حاول مرة أخرى.'; }
+  render();
+}
+async function doImport() {
+  const d = io.imp; if (!d || !io.db) return;
+  if (d.lockedChanged.length && myRole() !== 'مدير') { io.note = 'الملف يغيّر شهوراً معتمدة. اطلب من المدير رفعه أو إعادة فتح هذه الشهور.'; return render(); }
+  io.busy = true; io.note = 'جاري حفظ البيانات…'; render();
+  try {
+    await autoBackup();
+    const strip = p => PAYK.map(k => p[k] ?? 0);
+    const ys = [...new Set(d.pay.map(p => p.y))];
+    await io.db.doc('hr/settings').set(d.settings);
+    for (const k of ['emps', 'adv', 'lv']) await io.db.doc('hr/' + k).set({rows: d[k]});
+    for (const k of ['plan', 'docs', 'hist', 'pen']) if (d[k]) await io.db.doc('hr/' + k).set({rows: d[k]});
+    for (const y of ys) await io.db.doc('pay/' + y).set({rows: d.pay.filter(p => p.y === y).map(strip)});
+    for (const y of io.payYears) if (!ys.includes(Number(y))) await io.db.doc('pay/' + y).delete();
+    await touch();
+    await logAudit('رفع ملف Excel', 'import', '', [{f: 'الموظفون', o: String(D.emps.length), n: String(d.emps.length)}, {f: 'صفوف الرواتب', o: String(D.pay.length), n: String(d.pay.length)},
+      {f: 'صافي كل الرواتب', o: money(sum(D.pay, p => p.net)), n: money(sum(d.pay, p => p.net))}]);
+    io.imp = null; io.note = 'تم تحديث البيانات.';
+  } catch (e) { io.note = writeErr(e); }
+  io.busy = false; render();
+}
+R.data = function () {
+  const d = io.imp;
+  const preview = d ? `<div class="panel"><h3>مراجعة الملف قبل الحفظ</h3>
+    ${table([['البيان'], ['الآن', 1], ['في الملف', 1]], [['الموظفون', D.emps.length, d.emps.length], ['صفوف الرواتب', D.pay.length, d.pay.length], ['صافي كل الرواتب', money(sum(D.pay, p => p.net)), money(sum(d.pay, p => p.net))],
+      ['السلف', D.adv.length, d.adv.length], ['الإجازات', D.lv.length, d.lv.length], ['خطة الإجازات', D.plan.length, d.plan ? d.plan.length : 'بدون تغيير'], ['المستندات', D.docs.length, d.docs ? d.docs.length : 'بدون تغيير'],
+      ['سجل الرواتب', D.hist.length, d.hist ? d.hist.length : 'بدون تغيير'], ['الجزاءات', D.pen.length, d.pen ? d.pen.length : 'بدون تغيير']].map(x => `<tr>${td(x[0])}${tn(x[1])}${tn(x[2])}</tr>`))}
+    ${d.warn.map(w => `<p class="msg warn">${esc(w)}</p>`).join('')}
+    <p class="note">الحفظ يستبدل البيانات الحالية بمحتوى الملف، ويُحفظ قبلها نسخة احتياطية، ويُسجَّل في سجل التعديلات. الطلبات والاعتمادات لا تتأثر.</p>
+    <div class="row"><button class="btn" data-act="save"${io.busy ? ' disabled' : ''}>حفظ واستبدال البيانات</button><button class="btn ghost" data-act="cancel"${io.busy ? ' disabled' : ''}>إلغاء</button></div></div>` : '';
+  return `<h2>Excel والنسخ الاحتياطية</h2>
+  <div class="panel"><h3>تنزيل البيانات</h3>
+    <p class="note">ملف Excel بكل البيانات: الموظفون، الرواتب، السلف، الإجازات، الخطة، المستندات، سجل الرواتب، الجزاءات، والإعدادات. احتفظ به نسخة احتياطية عندك، أو عدّل فيه وارفعه.</p>
+    <div class="row"><button class="btn" data-act="export"${io.loaded && D.emps.length ? '' : ' disabled'}>تنزيل ملف Excel</button></div></div>
+  <div class="panel"><h3>رفع ملف بعد التعديل</h3>
+    ${!may('import') ? '<p class="msg">رفع الملفات متاح للمدير والمحررين.</p>' :
+      `<div class="row"><label for="file" class="note">اختر ملف xlsx</label><input type="file" id="file" accept=".xlsx"></div>
+       <p class="note">يُقبل الملف الذي نزّلته من هنا أو ملف نظام الإكسيل. الأعمدة المحسوبة يعاد حسابها تلقائياً.</p>`}</div>${preview}
+  ${may('import') ? `<div class="panel"><h3>النسخ الاحتياطية</h3>
+    <p class="note">نسخة تلقائية كل يوم عند أول دخول للمدير أو المحرر، وقبل كل رفع ملف. يُحتفظ بآخر 30 يوماً.</p>
+    ${io.backups ? table([['التاريخ'], ['']], io.backups.map(b => `<tr>${td(dt(b))}<td class="acts">${may('restore') ? `<button class="mini" data-act="restore:${b}"${io.busy ? ' disabled' : ''}>استرجاع</button>` : ''}</td></tr>`)) : `<button class="btn ghost" data-act="listbk">عرض النسخ</button>`}
+    ${may('restore') ? '<p class="note">الاسترجاع يرجع الموظفين والرواتب وكل السجلات لحالتها في ذلك اليوم، ويُسجَّل في سجل التعديلات.</p>' : ''}</div>` : ''}
+  ${may('import') && !D.emps.length && SUM && SUM.emps && SUM.emps.length ? `<div class="panel infoband"><h3>استيراد البيانات المبدئية المدمجة</h3><p class="note">قاعدة البيانات فارغة حالياً. يمكنك رفع ملف Excel الكامل بالأعلى، أو الضغط هنا لتحميل بيانات الموظفين والإجازات المبدئية المدمجة في الملف (${SUM.emps.length} موظف) كبداية سريعة.</p>
+    <div class="row"><button class="btn" data-act="seed"${io.busy ? ' disabled' : ''}>تحميل البيانات المبدئية في قاعدة البيانات</button></div></div>` : ''}`;
+};
+
+/* ---------- navigation, rendering, events, loading ---------- */
+const FVIEWS = [['dashboard', 'لوحة التحكم'], ['employees', 'الموظفون'], ['hist', 'سجل الرواتب'], ['payroll', 'كشف الرواتب'], ['approvals', 'الاعتمادات'], ['advances', 'السلف'],
+  ['pen', 'الجزاءات'], ['leaves', 'الإجازات'], ['plan', 'خطة الإجازات'], ['docs', 'المستندات'], ['balances', 'الأرصدة ونهاية الخدمة'], ['profile', 'ملف الموظف'],
+  ['payslip', 'قسيمة الراتب'], ['reports', 'التقارير'], ['audit', 'سجل التعديلات'], ['admin', 'الإعدادات والصلاحيات'], ['data', 'Excel والنسخ']];
+function render() {
+  const full = io.mode === 'full', views = full ? FVIEWS : SVIEWS;
+  let v = location.hash.slice(1); if (!views.some(x => x[0] === v)) v = views[0][0];
+  const clinic = full ? S.clinic : (SUM && SUM.clinic) || S.clinic;
+  document.getElementById('clinic').textContent = 'نظام شؤون الموظفين – ' + (clinic || 'العيادة');
+  document.getElementById('asof').textContent = full ? (NAMES[me.id] ? NAMES[me.id] + ' · ' : '') + 'دورك: ' + myRole() + (D.asof ? ' · تحديث: ' + dt(D.asof) : '') : '';
+  document.getElementById('nav').innerHTML = io.mode === 'loading' ? '' : views.map(([k, l]) => {
+    const badge = k === 'approvals' ? pendingCount() : k === 'docs' ? D.docs.filter(d => ['منتهي', 'ينتهي قريباً'].includes(docState(d).s)).length : 0;
+    return `<a href="#${k}"${k === v ? ' aria-current="page"' : ''}>${l}${badge ? ` <span class="cnt-b">${badge}</span>` : ''}</a>`; }).join('');
+  let html;
+  if (io.mode === 'loading') html = `<p class="empty">${esc(io.msg)}</p>`;
+  else if (!full) html = SUM ? RS[v]() : `<div class="panel"><p class="empty">${esc(io.msg)}</p></div>`;
+  else if (v === 'data' || v === 'admin' || v === 'audit') html = R[v]();
+  else if (!D.emps.length) html = `<div class="panel"><p class="empty">لا توجد بيانات بعد. ${may('import') ? 'افتح <a href="#data" style="color:var(--accent)">Excel والنسخ</a> وارفع ملف النظام.' : 'اطلب من المدير رفع ملف النظام.'}</p></div>`;
+  else html = R[v]();
+  if (io.note) html = `<p class="msg toast" role="status">${esc(io.note)} <button class="mini" data-act="clrnote" aria-label="إغلاق">×</button></p>` + html;
+  if (io.offline && full) html = `<p class="msg warn">الاتصال بالخادم متقطع: ما تراه قد لا يكون آخر نسخة، والحفظ قد يفشل حتى يعود الاتصال.</p>` + html;
+  document.getElementById('app').innerHTML = html;
+  const sp = document.getElementById('syncPill'), stxt = document.getElementById('syncTxt');
+  if (sp && stxt) {
+    sp.classList.toggle('off', !!io.offline);
+    stxt.textContent = io.offline ? 'اتصال متقطع' : 'متصل لحظياً';
+  }
+  const cur = document.querySelector('nav a[aria-current]'); if (cur) cur.scrollIntoView({block: 'nearest', inline: 'center'});
+}
+const pendingCount = () => REQ.filter(r => (r.status === 'بانتظار المدير' && may('req-manager')) || (r.status === 'بانتظار الموارد البشرية' && may('req-hr'))).length
+  + Object.values(CLOSE).filter(c => c.status === 'بانتظار الاعتماد' && may('close-approve')).length;
+
+const app = document.getElementById('app'), modal = document.getElementById('modal');
+app.addEventListener('change', async e => {
+  const t = e.target;
+  if (t.id === 'file') {
+    const f = t.files[0]; if (!f) return;
+    try { io.imp = parseWorkbook(await f.arrayBuffer()); io.note = ''; } catch (err) { io.imp = null; io.note = 'تعذر قراءة الملف: ' + (err.message || 'صيغة غير مدعومة'); }
+    return render();
+  }
+  if (t.dataset.role) {
+    const uid = t.dataset.role, role = t.value;
+    try { if (role) await io.db.doc('roles/' + uid).set({role}); else await io.db.doc('roles/' + uid).delete();
+      await logAudit('تغيير دور', 'roles', who(uid), [{f: 'الدور', o: (ROLES[uid] || {}).role || '', n: role}]); io.note = 'تم تحديث الدور.'; }
+    catch (err) { io.note = writeErr(err); }
+    return render();
+  }
+  if (t.dataset.ks) { st[t.dataset.ks] = t.value; return render(); }
+  if (t.dataset.st) { st[t.dataset.st] = t.value; return render(); }
+  const k = t.dataset.k; if (k) { st[k] = Number(t.value); render(); }
+});
+document.addEventListener('click', e => {
+  const a = e.target.closest('[data-emp]'); if (a) st.emp = Number(a.dataset.emp);
+  const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
+  const [act, x, y2] = b.dataset.act.split(':');
+  if (act !== 'ask') CONFIRM.key = null;
+  if (act === 'export') doExport();
+  else if (act === 'save') doImport();
+  else if (act === 'cancel') { io.imp = null; io.note = ''; render(); }
+  else if (act === 'clrnote') { io.note = ''; render(); }
+  else if (act === 'add') openForm(x, null, x === 'pay' ? {y: st.fy, m: st.fm || st.m} : x === 'req' || x === 'plan' || x === 'lv' || x === 'docs' || x === 'hist' || x === 'pen' || x === 'adv' ? (st.emp && location.hash === '#profile' ? {id: st.emp} : {}) : {});
+  else if (act === 'edit') openForm(x, b.dataset.act.slice(x.length + 6));
+  else if (act === 'ask') { CONFIRM.key = b.dataset.act.slice(4); render(); }
+  else if (act === 'nodel') render();
+  else if (act === 'del') { const key = b.dataset.act.slice(x.length + 5); deleteRecord(x, key).then(() => { io.note = 'تم الحذف.'; render(); }).catch(err => { io.note = writeErr(err); render(); }); }
+  else if (act === 'mclose') { MODAL.open = false; renderModal(); }
+  else if (act === 'logout') { firebase.auth().signOut(); }
+  else if (act === 'resetpw') {
+    const u = USERS[x];
+    if (u && u.email) {
+      firebase.auth().sendPasswordResetEmail(u.email)
+        .then(() => { io.note = 'تم إرسال رابط إعادة تعيين كلمة المرور إلى ' + u.email; render(); })
+        .catch(err => { io.note = 'تعذر إرسال الرابط: ' + authErrAr(err); render(); });
+    }
+  }
+  else if (act === 'seed') seedInitialData();
+  else if (act === 'gen') generateMonth(st.fy, st.fm);
+  else if (act === 'close') closeAction(+x.split('-')[0], +x.split('-')[1], y2);
+  else if (act === 'req') reqAction(x, y2);
+  else if (act === 'printreq') { const r = REQ.find(q => q.k === x); if (r) printLeave(r, 'req'); }
+  else if (act === 'printlv') { const r = D.lv.find(q => q.k === x); if (r) printLeave(r, 'lv'); }
+  else if (act === 'printplan') { const r = D.plan.find(q => q.k === x); if (r) printLeave(r, 'plan'); }
+  else if (act === 'printslip') { const e2 = empById[st.emp]; if (e2) printSlip(e2, st.y, st.m); }
+  else if (act === 'printsettle') { const e2 = empById[st.emp]; if (e2) printSettle(e2, st.sreason || REASONS[0], st.sdate || today); }
+  else if (act === 'printrep') printMonthReport(st.ry || st.y, st.rm || 0);
+  else if (act === 'listbk') listBackups();
+  else if (act === 'restore') restoreBackup(x);
+  else if (act === 'pubsum') publishSummary();
+});
+modal.addEventListener('submit', e => { e.preventDefault(); submitForm(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && MODAL.open) { MODAL.open = false; renderModal(); } });
+addEventListener('hashchange', () => { io.note = ''; CONFIRM.key = null; render(); scrollTo(0, 0); });
+
+const raw = {hr: null, pay: null};
+function rebuild() {
+  if (!raw.hr || !raw.pay) return;
+  const h = raw.hr, rows = k => (h[k] && Array.isArray(h[k].rows) ? h[k].rows.map(x => ({...x})) : []);
+  const pay = [];
+  io.payYears = Object.keys(raw.pay);
+  for (const y of io.payYears) for (const a of (raw.pay[y].rows || [])) { const p = {y: Number(y)}; PAYK.forEach((k, i) => p[k] = a[i]); p.note = p.note || ''; p.bank = p.bank || 0; p.method = p.method || ''; pay.push(p); }
+  const set = h.settings ? {...h.settings} : {};
+  set.clinic = set.clinic || (SUM && SUM.clinic) || 'FN Clinic';
+  set.currency = set.currency || (SUM && SUM.currency) || 'د.ك';
+  set.depts = set.depts && set.depts.length ? set.depts : (SUM && SUM.depts) || ['الإدارة','الأطباء','التمريض','الاستقبال','التجميل','الخدمات'];
+  set.ltypes = set.ltypes && set.ltypes.length ? set.ltypes : (SUM && SUM.ltypes) || ['سنوية','مرضية','بدون راتب','طارئة','أمومة','أخرى'];
+  set.res = set.res && set.res.length === 4 ? set.res : [0, 0.5, 0.667, 1];
+  set.wd = set.wd || 26; set.hrs = set.hrs || 8; set.mult = set.mult || 1.25;
+  set.ldays = set.ldays || 30; set.d1 = set.d1 || 15; set.d2 = set.d2 || 30; set.cap = set.cap || 18;
+  set.base = set.base || 'الإجمالي'; set.alert = set.alert || 60;
+  const withK = a => a.map(r => (r.k ? r : {...r, k: rid()}));
+  setData({settings: set, emps: rows('emps'), adv: withK(rows('adv')), lv: withK(rows('lv')), plan: withK(rows('plan')), docs: withK(rows('docs')), hist: withK(rows('hist')), pen: withK(rows('pen')), pay, asof: h.meta ? h.meta.asof : null});
+  io.loaded = true; io.mode = 'full'; render();
+}
+
+async function seedInitialData() {
+  if (!SUM || !io.db || !may('import')) return;
+  io.busy = true; io.note = 'جاري تحميل البيانات المبدئية…'; render();
+  try {
+    const defSet = {
+      clinic: SUM.clinic || 'FN Clinic', currency: SUM.currency || 'د.ك',
+      wd: 26, hrs: 8, mult: 1.25, ldays: 30, d1: 15, d2: 30, cap: 18, base: 'الإجمالي',
+      res: [0, 0.5, 0.667, 1], lstart: '2024-01-01', alert: 60,
+      depts: SUM.depts || ['الإدارة','الأطباء','التمريض','الاستقبال','التجميل','الخدمات'],
+      jobs: [...new Set((SUM.emps || []).map(e => e.job).filter(Boolean))],
+      ltypes: SUM.ltypes || ['سنوية','مرضية','بدون راتب','طارئة','أمومة','أخرى']
+    };
+    const emps = (SUM.emps || []).map(e => ({
+      id: e.id, name: e.name, job: e.job || '', dept: e.dept || '', nat: '', civil: '', phone: '',
+      hire: e.hire || null, status: e.status || ACTIVE, end: null,
+      basic: 0, house: 0, trans: 0, other: 0, bank: '', iban: '', open: 0, note: ''
+    }));
+    const lv = (SUM.lv || []).map(l => ({ k: rid(), id: l.id, type: l.type, from: l.from, to: l.to, days: l.days, note: '' }));
+    await io.db.doc('hr/settings').set(defSet);
+    await io.db.doc('hr/emps').set({ rows: emps });
+    await io.db.doc('hr/lv').set({ rows: lv });
+    await touch();
+    await logAudit('تحميل مبدئي', 'import', `${emps.length} موظف`, []);
+    io.note = 'تم تحميل البيانات المبدئية بنجاح. يمكنك تعديل الرواتب أو رفع ملف Excel الكامل في أي وقت.';
+  } catch (e) {
+    io.note = writeErr(e);
+  }
+  io.busy = false; render();
+}
+
+try { const e = JSON.parse(document.getElementById('snap').textContent); if (e && e.emps) SUM = e; } catch (e) {}
+
+/* Native browser downloads for Excel export & printable HTML forms */
+io.dl = {
+  async save({ filename, data }) {
+    const isBin = data instanceof Uint8Array || data instanceof ArrayBuffer;
+    const blob = new Blob([data], {
+      type: isBin ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'text/html;charset=utf-8'
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  }
+};
+
+/* Standalone user profile resolver backed by Firestore users collection */
+io.user = {
+  async profiles(ids) {
+    const res = {};
+    for (const i of ids) {
+      const u = USERS[i];
+      res[i] = { name: (u && (u.name || u.email)) || '' };
+    }
+    return res;
+  }
+};
+
+/* =====================================================================
+   Firebase Authentication & Real-Time Firestore Lifecycle
+   ===================================================================== */
+let unsubs = [], auditUnsub = null;
+function stopSession() {
+  unsubs.forEach(u => { try { u(); } catch (e) {} });
+  unsubs = [];
+  if (auditUnsub) { try { auditUnsub(); } catch (e) {} auditUnsub = null; }
+  raw.hr = null; raw.pay = null;
+  CLOSE = {}; REQ = []; AUD = []; ROLES = {}; USERS = {};
+  me.id = null; me.isOwner = false; me.canEdit = false;
+  io.loaded = false; io.mode = 'loading'; io.note = ''; io.imp = null; io.backups = null;
+  MODAL.open = false; renderModal();
+}
+
+function showAuth(show) {
+  document.getElementById('authScreen').classList.toggle('show', show);
+  document.getElementById('shellmark').classList.toggle('hidden', show);
+  document.getElementById('app').classList.toggle('hidden', show);
+}
+
+function setAuthMsg(err, ok) {
+  const eEl = document.getElementById('authErr'), oEl = document.getElementById('authOk');
+  eEl.textContent = err || ''; eEl.classList.toggle('show', !!err);
+  oEl.textContent = ok || ''; oEl.classList.toggle('show', !!ok);
+}
+
+function syncMyPermissions() {
+  const r = (ROLES[me.id] && ROLES[me.id].role) || 'مشاهد';
+  me.isOwner = r === 'مدير';
+  me.canEdit = ['مدير', 'موارد بشرية', 'محاسب', 'محرر'].includes(r);
+  if (me.canEdit && !auditUnsub && io.db) {
+    auditUnsub = io.db.collection('audit').orderBy('at', 'desc').limit(300).onSnapshot(s => {
+      AUD = s.docs.map(d => d.data());
+      if (location.hash === '#audit') render();
+    }, () => {});
+  } else if (!me.canEdit && auditUnsub) {
+    try { auditUnsub(); } catch (e) {}
+    auditUnsub = null; AUD = [];
+  }
+}
+
+async function startSession(fbUser) {
+  stopSession();
+  showAuth(false);
+  io.mode = 'loading';
+  io.msg = 'جاري الاتصال بقاعدة البيانات وتحميل صلاحياتك…';
+  render();
+
+  const db = io.db;
+  me.id = fbUser.uid;
+  const fallbackName = fbUser.displayName || (fbUser.email ? fbUser.email.split('@')[0] : 'مستخدم');
+  NAMES[me.id] = fallbackName;
+
+  try {
+    // 1. First-time bootstrap: if no _init sentinel exists yet, first user becomes المدير
+    const initRef = db.doc('roles/_init');
+    const initSnap = await initRef.get();
+    if (!initSnap.exists) {
+      await db.doc('roles/' + fbUser.uid).set({ role: 'مدير', isOwner: true });
+      await initRef.set({ owner: fbUser.uid, at: new Date().toISOString() });
+    }
+
+    // 2. Ensure user profile doc exists & update last-seen date (preserving custom name)
+    const uRef = db.doc('users/' + fbUser.uid);
+    const uSnap = await uRef.get();
+    if (!uSnap.exists) {
+      await uRef.set({ name: fallbackName, email: fbUser.email || '', seen: today });
+    } else {
+      const ud = uSnap.data() || {};
+      if (ud.name) NAMES[me.id] = ud.name;
+      if (ud.seen !== today || !ud.email) {
+        await uRef.set({ email: fbUser.email || ud.email || '', seen: today }, { merge: true }).catch(() => {});
+      }
+    }
+
+    // 3. Load current role immediately before opening streams
+    const myRoleSnap = await db.doc('roles/' + fbUser.uid).get();
+    if (myRoleSnap.exists) ROLES[fbUser.uid] = myRoleSnap.data();
+    syncMyPermissions();
+  } catch (e) {
+    io.note = 'تحذير: تحقق من قواعد أمان Firestore (Security Rules). ' + (e.message || '');
+  }
+
+  const onErr = err => {
+    io.offline = true;
+    if (io.mode === 'loading') {
+      io.msg = 'تعذر قراءة البيانات. تحقق من اتصال الإنترنت أو قواعد أمان Firestore.';
+    }
+    render();
+  };
+
+  const sub = (k, apply) => {
+    const u = db.collection(k).onSnapshot(s => {
+      const o = {};
+      s.docs.forEach(d => { o[d.id] = d.data(); });
+      if (!(s.metadata && s.metadata.fromCache)) io.offline = false;
+      apply(o, s);
+    }, onErr);
+    unsubs.push(u);
+  };
+
+  sub('roles', o => {
+    ROLES = o;
+    syncMyPermissions();
+    render();
+  });
+
+  sub('users', o => {
+    USERS = o;
+    for (const [uid, u] of Object.entries(o)) {
+      if (u && (u.name || u.email)) NAMES[uid] = u.name || u.email;
+    }
+    render();
+  });
+
+  sub('hr', o => {
+    raw.hr = o || {};
+    if (!raw.pay) raw.pay = {};
+    rebuild();
+  });
+
+  sub('pay', o => {
+    raw.pay = o || {};
+    if (raw.hr) rebuild();
+  });
+
+  sub('close', o => { CLOSE = o; render(); });
+  sub('requests', (o, s) => {
+    REQ = s.docs.map(d => ({...d.data(), k: d.id})).sort((a, b) => (b.at || '').localeCompare(a.at || ''));
+    render();
+  });
+
+  syncMyPermissions();
+  setTimeout(autoBackup, 4000);
+}
+
+/* Initialize Firebase & wire Login UI */
+(() => {
+  const isConfigured = FIREBASE_CONFIG && FIREBASE_CONFIG.apiKey && !String(FIREBASE_CONFIG.apiKey).startsWith('ضع_') && FIREBASE_CONFIG.projectId && !String(FIREBASE_CONFIG.projectId).startsWith('ضع_');
+  const cfgWarn = document.getElementById('cfgWarn');
+  const loginForm = document.getElementById('loginForm');
+  const loginBtn = document.getElementById('loginBtn');
+  const forgotBtn = document.getElementById('forgotBtn');
+
+  if (!isConfigured) {
+    cfgWarn.classList.add('show');
+    loginBtn.disabled = true;
+    forgotBtn.disabled = true;
+    return;
+  }
+
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    io.db = firebase.firestore();
+    // Enable offline persistence for smoother real-time experience (best effort)
+    io.db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+  } catch (e) {
+    setAuthMsg('خطأ في إعدادات Firebase: ' + (e.message || ''));
+    return;
+  }
+
+  loginForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    setAuthMsg('', '');
+    const email = document.getElementById('loginEmail').value.trim();
+    const pass = document.getElementById('loginPass').value;
+    if (!email || !pass) return setAuthMsg('أدخل البريد الإلكتروني وكلمة المرور.');
+    loginBtn.disabled = true;
+    loginBtn.textContent = 'جاري تسجيل الدخول…';
+    try {
+      await firebase.auth().signInWithEmailAndPassword(email, pass);
+      document.getElementById('loginPass').value = '';
+    } catch (err) {
+      setAuthMsg(authErrAr(err));
+    } finally {
+      loginBtn.disabled = false;
+      loginBtn.textContent = 'تسجيل الدخول';
+    }
+  });
+
+  forgotBtn.addEventListener('click', async () => {
+    setAuthMsg('', '');
+    const email = document.getElementById('loginEmail').value.trim();
+    if (!email) return setAuthMsg('اكتب بريدك الإلكتروني في الخانة بالأعلى أولاً ثم اضغط على «نسيت كلمة المرور».');
+    try {
+      await firebase.auth().sendPasswordResetEmail(email);
+      setAuthMsg('', 'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني.');
+    } catch (err) {
+      setAuthMsg(authErrAr(err));
+    }
+  });
+
+  firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+      setAuthMsg('', '');
+      startSession(user);
+    } else {
+      stopSession();
+      showAuth(true);
+    }
+  });
+})();
+
+</script>
+</body>
+</html>
