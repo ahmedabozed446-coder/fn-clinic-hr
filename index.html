@@ -1684,6 +1684,29 @@ async function startSession(fbUser) {
   setTimeout(autoBackup, 4000);
 }
 
+/* Firestore cannot store arrays inside arrays (payroll rows are arrays).
+   Encode [[...],[...]] as [{_a:[...]},...] on write and decode on read. */
+function fsEnc(v) {
+  if (Array.isArray(v)) return v.map(x => Array.isArray(x) ? {_a: fsEnc(x)} : fsEnc(x));
+  if (v && typeof v === 'object') { const o = {}; for (const k of Object.keys(v)) if (v[k] !== undefined) o[k] = fsEnc(v[k]); return o; }
+  return v;
+}
+function fsDec(v) {
+  if (Array.isArray(v)) return v.map(x => (x && typeof x === 'object' && !Array.isArray(x) && Array.isArray(x._a) && Object.keys(x).length === 1) ? fsDec(x._a) : fsDec(x));
+  if (v && typeof v === 'object') { const o = {}; for (const k of Object.keys(v)) o[k] = fsDec(v[k]); return o; }
+  return v;
+}
+function wrapDb(db) {
+  const wd = d => ({id: d.id, exists: d.exists, ref: d.ref, data: () => { const x = d.data(); return x === undefined ? x : fsDec(x); }});
+  const ws = s => ({docs: s.docs.map(wd), size: s.size, empty: s.empty, metadata: s.metadata, forEach: f => s.docs.map(wd).forEach(f)});
+  const wdoc = r => ({id: r.id, set: (d, o) => o ? r.set(fsEnc(d), o) : r.set(fsEnc(d)), update: d => r.update(fsEnc(d)), delete: () => r.delete(),
+    get: async () => wd(await r.get()), onSnapshot: (f, e) => r.onSnapshot(d => f(wd(d)), e)});
+  const wq = q => ({onSnapshot: (f, e) => q.onSnapshot(s => f(ws(s)), e), get: async () => ws(await q.get()),
+    orderBy: (...a) => wq(q.orderBy(...a)), limit: n => wq(q.limit(n)), where: (...a) => wq(q.where(...a)),
+    add: async d => wdoc(await q.add(fsEnc(d))), doc: id => wdoc(id === undefined ? q.doc() : q.doc(id))});
+  return {raw: db, doc: p => wdoc(db.doc(p)), collection: c => wq(db.collection(c)), enablePersistence: o => db.enablePersistence(o)};
+}
+
 /* Initialize Firebase & wire Login UI */
 (() => {
   const isConfigured = FIREBASE_CONFIG && FIREBASE_CONFIG.apiKey && !String(FIREBASE_CONFIG.apiKey).startsWith('ضع_') && FIREBASE_CONFIG.projectId && !String(FIREBASE_CONFIG.projectId).startsWith('ضع_');
@@ -1701,7 +1724,7 @@ async function startSession(fbUser) {
 
   try {
     firebase.initializeApp(FIREBASE_CONFIG);
-    io.db = firebase.firestore();
+    io.db = wrapDb(firebase.firestore());
     // Enable offline persistence for smoother real-time experience (best effort)
     io.db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
   } catch (e) {
