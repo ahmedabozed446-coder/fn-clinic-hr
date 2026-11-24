@@ -504,6 +504,7 @@ const R = {
         ${kv('نهاية الخدمة كاملة', money(b.eos), 1)}${kv(`عند الاستقالة (${Math.round(b.pct * 100)}%)`, money(b.eosRes))}${kv('إجمالي السلف', money(b.advTotal))}${kv('المسدد', money(b.repaid))}${kv('رصيد السلف المتبقي', money(b.advBal), 1)}${kv('صافي التسوية التقديرية', money(b.net), 1)}
       </div></div>
     </div>
+    ${absencePanel(e)}
     ${(() => { const s = settleCalc(e, st.sreason, st.sdate || today); return `<div class="panel"><div class="row between"><h3>التسوية النهائية حسب سبب انتهاء الخدمة</h3><button class="btn ghost" data-act="printsettle">تنزيل كشف نهاية الخدمة</button></div>
       <div class="controls"><label for="sreason">السبب<select id="sreason" data-st="sreason">${REASONS.map(r => opt(r, r, st.sreason)).join('')}</select></label><label for="sdate">تاريخ انتهاء الخدمة<input type="date" id="sdate" data-st="sdate" value="${esc(st.sdate || today)}"></label></div>
       <div class="kv">${kv('مدة الخدمة', num(s.yrs, 2) + ' سنة')}${kv('نهاية الخدمة الكاملة', money(s.full))}${kv('نسبة الاستحقاق', Math.round(s.pct * 100) + '%')}${kv('نهاية الخدمة المستحقة', money(s.due), 1)}
@@ -584,6 +585,57 @@ function salaryAt(id, y, m) {
   return h ? {basic: +h.basic || 0, house: +h.house || 0, trans: +h.trans || 0, other: +h.other || 0} : {basic: e.basic || 0, house: e.house || 0, trans: e.trans || 0, other: e.other || 0};
 }
 const penFor = (id, y, m) => D.pen.filter(p => p.id === id && (+p.y || (p.date ? +p.date.slice(0, 4) : 0)) === y && (+p.m || (p.date ? +p.date.slice(5, 7) : 0)) === m);
+
+/* ---------- سجل الغياب والإجازات منذ التعيين ---------- */
+function absenceData(e) {
+  const myPay = D.pay.filter(p => p.id === e.id).sort((a, b) => a.y - b.y || a.m - b.m);
+  const start = e.hire || (myPay[0] ? ymd(myPay[0].y, myPay[0].m, 1) : null);
+  if (!start) return null;
+  const end = e.end && e.end < today ? e.end : today;
+  const [sy, sm, sd] = start.split('-').map(Number), [ey, em, ed] = end.split('-').map(Number);
+  const lvs = D.lv.filter(l => l.id === e.id);
+  const kind = t => t === 'بدون راتب' ? 'unpaid' : t === 'سنوية' ? 'annual' : t === 'مرضية' ? 'sick' : 'other';
+  const rows = [];
+  for (let y = sy, m = sm; y < ey || (y === ey && m <= em); m === 12 ? (y++, m = 1) : m++) {
+    const a = ymd(y, m, 1), b = ymd(y, m, dim(y, m)), r = {y, m, unpaid: 0, annual: 0, sick: 0, other: 0, absent: 0, ded: 0, note: '', inPay: false};
+    for (const l of lvs) {
+      if (!l.from || !l.to) continue;
+      const cal = ovl(l.from, l.to, l.from, l.to), part = ovl(l.from, l.to, a, b);
+      if (part) r[kind(l.type)] += (+l.days || cal) * part / cal;
+    }
+    const ps = myPay.filter(p => p.y === y && p.m === m);
+    if (ps.length) {
+      r.inPay = true;
+      // أيام قبل التعيين أو بعد نهاية الخدمة في نفس الشهر ليست غياباً
+      const wd = +S.wd || 26, dm = dim(y, m);
+      const pre = e.hire && y === sy && m === sm ? (sd - 1) * wd / dm : 0;
+      const post = e.end && y === ey && m === em ? (dm - ed) * wd / dm : 0;
+      r.absent = Math.max(0, sum(ps, p => +p.absd || 0) - r.unpaid - pre - post);
+      if (r.absent < 0.5) r.absent = 0;
+      r.ded = sum(ps, p => (+p.absded || 0) + (+p.otherded || 0));
+      r.note = ps.map(p => p.note).filter(Boolean).join(' – ');
+    }
+    rows.push(r);
+  }
+  const undated = {unpaid: 0, annual: 0, sick: 0, other: 0};
+  for (const l of lvs) if (!l.from || !l.to) undated[kind(l.type)] += +l.days || 0;
+  const T = k => sum(rows, r => r[k]) + (undated[k] || 0);
+  return {start, end, rows, undated, tot: {absent: T('absent'), unpaid: T('unpaid'), annual: T('annual'), sick: T('sick'), other: T('other'), ded: sum(rows, r => r.ded)}};
+}
+function absencePanel(e) {
+  const A = absenceData(e);
+  if (!A) return '<div class="panel"><h3>الغياب منذ التعيين</h3><p class="note">لا يوجد تاريخ تعيين ولا رواتب مسجلة لهذا الموظف.</p></div>';
+  const t = A.tot, n = x => x ? num(Math.round(x * 100) / 100) : '—', k = x => num(Math.round((x || 0) * 100) / 100) + ' يوم';
+  const active = A.rows.filter(r => r.absent || r.unpaid || r.annual || r.sick || r.other || r.ded).reverse();
+  const und = A.undated, hasUnd = und.unpaid || und.annual || und.sick || und.other;
+  return `<div class="panel"><h3>الغياب والإجازات منذ التعيين (${dt(A.start)} – ${dt(A.end)})</h3>
+    <div class="kv">${kv('أيام الغياب (غير مبرر)', k(t.absent), 1)}${kv('إجازات بدون راتب', k(t.unpaid), 1)}${kv('إجمالي أيام عدم الحضور غير المدفوعة', k(t.absent + t.unpaid), 1)}
+      ${kv('إجازات سنوية', k(t.annual))}${kv('إجازات مرضية', k(t.sick))}${kv('إجازات أخرى (طارئة/أمومة…)', k(t.other))}${kv('خصومات الغياب والخصومات الأخرى في الكشوف', money(t.ded))}</div>
+    ${active.length ? table([['الشهر'], ['غياب', 1], ['بدون راتب', 1], ['سنوية', 1], ['مرضية', 1], ['أخرى', 1], ['خصم بالكشف', 1], ['ملاحظات الكشف']],
+      active.map(r => `<tr>${td(MONTHS[r.m - 1] + ' ' + r.y)}${tn(n(r.absent))}${tn(n(r.unpaid))}${tn(n(r.annual))}${tn(n(r.sick))}${tn(n(r.other))}${tn(r.ded ? money(r.ded) : '—')}<td style="white-space:normal;min-width:220px">${esc(r.note)}</td></tr>`)) : '<p class="note">لا يوجد أي غياب أو إجازات مسجلة منذ التعيين.</p>'}
+    ${hasUnd ? `<p class="note">إجازات مسجلة بدون تواريخ (داخلة في الإجمالي وغير موزعة على الشهور): ${[['سنوية', und.annual], ['مرضية', und.sick], ['بدون راتب', und.unpaid], ['أخرى', und.other]].filter(x => x[1]).map(x => x[0] + ' ' + num(x[1]) + ' يوم').join('، ')}.</p>` : ''}
+    <p class="note">«غياب» = أيام الغياب المكتوبة في كشف الرواتب، بعد طرح أيام الإجازة بدون راتب لنفس الشهر حتى لا تتكرر. الإجازات من سجل «الإجازات». بعض الكشوف القديمة سجلت خصم الغياب كمبلغ فقط دون عدد الأيام، فراجع عمود «خصم بالكشف» والملاحظات.</p></div>`;
+}
 const unpaidDays = (id, y, m) => sum(D.lv.filter(l => l.id === id && l.type === 'بدون راتب'), l => ovl(l.from, l.to, ymd(y, m, 1), ymd(y, m, dim(y, m))));
 
 /* ---------- documents ---------- */
